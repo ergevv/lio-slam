@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "${default}",
+                "limitSymbolsToIncludedHeaders": false
+            },
+            "includePath": [
+                "/home/erge/桌面/开源工程/ros_ws/devel/include/**",
+                "/home/erge/桌面/开源工程/lvi-sam/devel/include/**",
+                "/opt/ros/noetic/include/**",
+                "/home/erge/桌面/开源工程/VINS-mono-with-drt/src/VINS-Mono-noted-master/camera_model/include/**",
+                "/home/erge/桌面/开源工程/ros_ws/src/robot_gazebo-main/lio-sam-noted/include/**",
+                "/home/erge/桌面/开源工程/ros_ws/src/robot_gazebo-main/realsense_ros_gazebo/include/**",
+                "/home/erge/桌面/开源工程/ros_ws/src/robot_gazebo-main/velodyne_simulator/velodyne_gazebo_plugins/include/**",
+                "/usr/include/**",
+                "/usr/include/pcl-1.10",
+                "/home/erge/桌面/开源工程/ros_ws/src/slam/include"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "c++14"
+        }
+    ],
+    "version": 4
+}

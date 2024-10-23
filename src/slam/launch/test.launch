@@ -1,0 +1,7 @@
+<launch>
+
+<node name="slam" pkg="slam" type="run_slam" />
+<node pkg="rosbag" type="play" name="playback" args="$(find slam)/bag/pc_imu.bag" output="screen"/>
+
+
+</launch>

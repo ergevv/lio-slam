@@ -1,0 +1,53 @@
+catkin_make -DCATKIN_WHITELIST_PACKAGES="slam"
+source ./devel/setup.bash
+roslaunch scout_gazebo scout_gazebo.launch
+rostopic list
+rostopic echo 
+rosrun teleop_twist_keyboard teleop_twist_keyboard.py
+
+
+问题1：为什么libgazebo_ros_velodyne_laser.so无法直接生成，要单独拎出来
+
+
+catkin_create_pkg 自定义ROS包名 roscpp rospy std_msgs
+
+sensor_msgs/Imu
+
+sensor_msgs::PointCloud2
+
+
+#ifndef EXAMPLE_H
+#define EXAMPLE_H
+
+// 正常的头文件内容
+
+#else
+#error "Example header is included more than once!"
+#endif // EXAMPLE_H
+
+    "C_Cpp.intelliSenseEngine": "Tag Parser",  //自动提示自己定义的类、函数、变量
+IntelliSense 配置:配置默认的c_cpp
+
+文件名、函数：驼峰命名，首字母小写
+类、结构、模板声明、别名：驼峰命名，首字母大写
+命名空间、变量：全部小写+下划线
+成员变量：最后加下划线
+宏：全部大写+下划线
+
+代码排版：
+Windows系统下使用Shift + Alt + F，Mac系统下使用Shift + Option + F，Linux系统使用Ctrl + Shift + I
+
+
+$ rosbag record -O pc_imu  /velodyne_points  /imu/data
+
+
+模板在头文件声明
+当在头文件定义函数时，要注意不要重复include
+
+https://wiseodd.github.io/techblog/2018/03/11/fisher-information/
+
+
+名义值也符合运动方程，因为他是不包含噪声的方程，最理想的状态
+
+零偏随机游走是零偏的导数，符合高斯分布
+测量噪声，真值与测量值之差，也符合高斯分布
