@@ -1,2 +1,0 @@
-robot_gazebo-main/lio-sam-noted:robot_gazebo-main/pcd2pgm:robot_gazebo-main/realsense_ros_gazebo:robot_gazebo-main/scout_gazebo:robot_gazebo-main/scout_slam_nav:robot_gazebo-main/velodyne_simulator/velodyne_description:robot_gazebo-main/velodyne_simulator/velodyne_gazebo_plugins:robot_gazebo-main/velodyne_simulator/velodyne_simulator:slam
--DCATKIN_DEVEL_PREFIX=/home/erge/桌面/开源工程/ros_ws/devel -DCMAKE_INSTALL_PREFIX=/home/erge/桌面/开源工程/ros_ws/install -G Unix Makefiles

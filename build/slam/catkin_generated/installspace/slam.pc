@@ -1,8 +1,0 @@
-prefix=/home/erge/桌面/开源工程/ros_ws/install
-
-Name: slam
-Description: Description of slam
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
