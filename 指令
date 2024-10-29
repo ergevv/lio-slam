@@ -51,3 +51,15 @@ https://wiseodd.github.io/techblog/2018/03/11/fisher-information/
 
 零偏随机游走是零偏的导数，符合高斯分布
 测量噪声，真值与测量值之差，也符合高斯分布
+
+
+git init//仓库初始化
+git add README.md//添加readme.md文件
+git commit -m "first commit//提交"
+git branch -M main
+git remote add origin git@github.com:ergevv/lio-slam.git
+git push -u origin main
+
+
+git rm --cached /build
+git rm --cached /devel
