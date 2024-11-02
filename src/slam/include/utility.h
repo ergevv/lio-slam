@@ -6,7 +6,7 @@
 #include <pcl/point_cloud.h>                 // pcl::PointCloud
 #include <pcl/point_types.h>                 // pcl::PointXYZ
 #include <pcl_conversions/pcl_conversions.h> // pcl::fromROSMsg
-#include <pcl/registration/ndt.h>  // NDT算法
+#include <pcl/registration/ndt.h>            // NDT算法
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Imu.h>
 #include <string>
@@ -81,12 +81,11 @@ namespace slam_czc
     Eigen::Matrix3d inverseRightJacobian(const Vector3d &phi);
     Eigen::Matrix3d vectorToR(const Vector3d &theta);
 
-    
     class State
     {
-        public:
-        State(double time):timestamp_(time){}
-        State(double time, Eigen::Quaterniond q,Eigen::Vector3d p,Eigen::Vector3d v, Eigen::Vector3d bg, Eigen::Vector3d bg):timestamp_(time),q_(q),p_(p),v_(v),bg_(bg),ba_(ba){}
+    public:
+        State(double time) : timestamp_(time) {}
+        State(double time, Eigen::Quaterniond q, Eigen::Vector3d p, Eigen::Vector3d v, Eigen::Vector3d bg, Eigen::Vector3d bg) : timestamp_(time), q_(q), p_(p), v_(v), bg_(bg), ba_(ba) {}
 
         Eigen::Matrix4f getTransform();
         double timestamp_ = 0;
@@ -100,15 +99,19 @@ namespace slam_czc
 
     class Pose
     {
-        public:
+    public:
         Eigen::Vector3d p_;
         Eigen::Quaterniond q_;
         Eigen::Matrix4f transform;
         Pose() = default;
-        Pose(Eigen::Vector3d p, Eigen::Quaterniond q):p_(p),q_(q){}
+        Pose(Eigen::Vector3d p, Eigen::Quaterniond q) : p_(p), q_(q) {}
     };
-        
-    
+
+    template <typename S>
+    inline Eigen::Matrix<S, 3, 1> vecFromArray(const std::vector<S> &v);
+
+    template <typename S>
+    inline Eigen::Matrix<S, 3, 3> matFromArray(const std::vector<S> &v);
 
 }
 

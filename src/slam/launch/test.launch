@@ -1,7 +1,17 @@
 <launch>
 
-<node name="slam" pkg="slam" type="run_slam" />
-<node pkg="rosbag" type="play" name="playback" args="$(find slam)/bag/pc_imu.bag" output="screen"/>
+
+
+
+    <arg name="bag_path" default = "$(find slam)/bag/pc_imu.bag" />
+    <arg name="config_path" default = "$(find slam)/config/slam.yaml" />
+
+    <node name="slam" pkg="slam" type="run_slam">
+        <param name="config_file" type="string" value="$(arg config_path)" />
+    </node>
+
+
+    <node pkg="rosbag" type="play" name="playback" args="$(find slam)/bag/pc_imu.bag" output="screen"/>
 
 
 </launch>

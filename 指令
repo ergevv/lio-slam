@@ -60,6 +60,5 @@ git branch -M main
 git remote add origin git@github.com:ergevv/lio-slam.git
 git push -u origin main
 
-
-git rm --cached /build
-git rm --cached /devel
+git rm --cached <file_path>
+git rm -r --cached devel

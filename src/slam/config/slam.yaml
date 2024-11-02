@@ -1,0 +1,8 @@
+
+%YAML:1.0
+
+mapping:
+  extrinsic_T: [ -0.17, 0, 0.255 ]
+  extrinsic_R: [ 1, 0, 0,
+                 0, 1, 0,
+                 0, 0, 1 ]

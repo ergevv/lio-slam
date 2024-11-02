@@ -7,6 +7,8 @@
 #include "imu_preintegration.h"
 #include "ceres/ceres.h"
 #include "factor.h"
+#include "parameters.h"
+
 
 namespace slam_czc
 {
@@ -40,7 +42,8 @@ TCP 协议有一个 Nagle 算法，默认情况下，当发送小数据包时，
 */
 
             // 在ROS中，当你订阅一个话题时，通常会接收到一个智能指针（如 std::shared_ptr 或 boost::shared_ptr），这个智能指针指向一个消息对象。在这种情况下，sensor_msgs::PointCloud2::ConstPtr 是一个指向 sensor_msgs::PointCloud2 消息的常量智能指针。
-
+            TIL_ = TIC;
+            QIL_.fromRotationMatrix(RIC);
             ndt_.setResolution(1.0);             // NDT网格分辨率
             ndt_.setMaximumIterations(35);       // 最大迭代次数
             ndt_.setTransformationEpsilon(0.01); // 收敛阈值

@@ -105,4 +105,18 @@ namespace slam_czc
         return transform;
     }
 
+        template <typename S>
+    inline Eigen::Matrix<S, 3, 1> vecFromArray(const std::vector<S> &v)
+    {
+        return Eigen::Matrix<S, 3, 1>(v[0], v[1], v[2]);
+    }
+    
+    template <typename S>
+    inline Eigen::Matrix<S, 3, 3> matFromArray(const std::vector<S> &v)
+    {
+        Eigen::Matrix<S, 3, 3> m;
+        m << v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8];
+        return m;
+    }
+
 }
