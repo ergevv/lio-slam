@@ -25,9 +25,9 @@ namespace slam_czc
         Eigen::Vector3d acce_ = Eigen::Vector3d::Zero();
     };
 
-    using imu_ptr = std::shared_ptr<slam_czc::IMU>;
+    using ImuPtr = std::shared_ptr<slam_czc::IMU>;
 
-    imu_ptr convertToIMU(const sensor_msgs::Imu::ConstPtr &imu_msg);
+    ImuPtr convertToIMU(const sensor_msgs::Imu::ConstPtr &imu_msg);
 
     // 自定义点云结构
     struct EIGEN_ALIGN16 Point

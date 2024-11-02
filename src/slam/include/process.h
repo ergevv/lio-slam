@@ -4,7 +4,7 @@
 #include "utility.h"
 #include <deque>
 #include "imu_init.h"
-#include "imu_preintegration.h"
+#include "integration_base.h"
 #include "ceres/ceres.h"
 #include "factor.h"
 #include "parameters.h"
@@ -61,7 +61,7 @@ namespace slam_czc
 
         nav_msgs::Path global_path;
 
-        std::shared_ptr<IMUPreintegration> imu_pre_ = nullptr;
+        std::shared_ptr<IntegrationBase> imu_pre_ = nullptr;
         State current_state_;
         State last_state_;
         std::deque<slam_czc::imu_ptr> imu_deque_;

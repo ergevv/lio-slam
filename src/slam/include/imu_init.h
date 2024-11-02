@@ -32,13 +32,14 @@ namespace slam_czc
         std::deque<slam_czc::IMU> init_imu_deque_;
         double init_begin_time = 0;
         Eigen::Vector3d gravity_ = Eigen::Vector3d::Zero();
-        Eigen::Vector3d cov_gyro_ = Eigen::Vector3d::Zero(); // 陀螺测量噪声协方差（初始化时评估）
-        Eigen::Vector3d cov_acce_ = Eigen::Vector3d::Zero(); // 加计测量噪声协方差（初始化时评估）
-        Eigen::Vector3d acce_w_var_ = Eigen::Vector3d::Identity();
-        Eigen::Vector3d gyro_w_var_ = Eigen::Vector3d::Identity();
 
+        
         Eigen::Vector3d init_ba_ = Eigen::Vector3d::Zero();
         Eigen::Vector3d init_bg_ = Eigen::Vector3d::Zero();
+        Eigen::Vector3d cov_gyro_n_ = Eigen::Vector3d::Zero(); // 陀螺测量噪声协方差（初始化时评估）
+        Eigen::Vector3d cov_acce_n_ = Eigen::Vector3d::Zero(); // 加计测量噪声协方差（初始化时评估）
+        Eigen::Vector3d cov_acce_w_ = Eigen::Vector3d::Identity();
+        Eigen::Vector3d cov_gyro_w_ = Eigen::Vector3d::Identity();
     };
 }
 

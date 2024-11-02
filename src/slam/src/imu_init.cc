@@ -39,13 +39,13 @@ namespace slam_czc
         }
 
         Eigen::Vector3d mean_gyro, mean_acce;
-        computeMeanAndCov(init_imu_deque_, mean_gyro, cov_gyro_, [](const IMU& imu){return imu.gyro_;});  //无->,代表没有显式指定返回类型，那么编译器会根据return语句的结果自动推导出返回类型
-        computeMeanAndCov(init_imu_deque_, mean_acce, cov_acce_, [](const IMU& imu){return imu.acce_;});
+        computeMeanAndCov(init_imu_deque_, mean_gyro, cov_gyro_n_, [](const IMU& imu){return imu.gyro_;});  //无->,代表没有显式指定返回类型，那么编译器会根据return语句的结果自动推导出返回类型
+        computeMeanAndCov(init_imu_deque_, mean_acce, cov_acce_n_, [](const IMU& imu){return imu.acce_;});
 
         //重力与加速度方向相反
         gravity_ = -mean_acce/mean_acce.norm() * options_.gravity_norm_;
         //计算去除重力后的协方差
-        computeMeanAndCov(init_imu_deque_, mean_acce, cov_acce_,
+        computeMeanAndCov(init_imu_deque_, mean_acce, cov_acce_n_,
                                 [this](const IMU& imu) { return imu.acce_ + gravity_; });
         if(cov_gyro_.norm()>options_.max_gyro_var_ || cov_acce_.norm()>options_.max_acce_var_)
         {

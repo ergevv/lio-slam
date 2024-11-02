@@ -1,40 +1,30 @@
-#pragma once
+#ifndef INTEGRATION_BASE_H
+#define INTEGRATION_BASE_H
 
-#include "../utility/utility.h"
-#include "../parameters.h"
-
-#include <ceres/ceres.h>
-using namespace Eigen;
+#include "utility.h"
 
 class IntegrationBase
 {
   public:
     IntegrationBase() = delete;
     IntegrationBase(const Eigen::Vector3d &_acc_0, const Eigen::Vector3d &_gyr_0,
-                    const Eigen::Vector3d &_linearized_ba, const Eigen::Vector3d &_linearized_bg)
+                    const Eigen::Vector3d &_linearized_ba, const Eigen::Vector3d &_linearized_bg,const Eigen::Vector3d &_cov_acce_n,
+                    const Eigen::Vector3d &_cov_gyro_n, const Eigen::Vector3d &_cov_acce_w,const Eigen::Vector3d &_cov_gyro_w)
         : acc_0{_acc_0}, gyr_0{_gyr_0}, linearized_acc{_acc_0}, linearized_gyr{_gyr_0},
           linearized_ba{_linearized_ba}, linearized_bg{_linearized_bg},
-            jacobian{Eigen::Matrix<double, 15, 15>::Identity()}, covariance{Eigen::Matrix<double, 15, 15>::Zero()},
+            jacobian{Eigen::Matrix<double, 15, 15>::Identity()}, covariance{Eigen::Matrix<double,, 15, 15>::Zero()},
           sum_dt{0.0}, delta_p{Eigen::Vector3d::Zero()}, delta_q{Eigen::Quaterniond::Identity()}, delta_v{Eigen::Vector3d::Zero()}
 
     {
         noise = Eigen::Matrix<double, 18, 18>::Zero();
-        noise.block<3, 3>(0, 0) =  (ACC_N * ACC_N) * Eigen::Matrix3d::Identity();
-        noise.block<3, 3>(3, 3) =  (GYR_N * GYR_N) * Eigen::Matrix3d::Identity();
-        noise.block<3, 3>(6, 6) =  (ACC_N * ACC_N) * Eigen::Matrix3d::Identity();
-        noise.block<3, 3>(9, 9) =  (GYR_N * GYR_N) * Eigen::Matrix3d::Identity();
-        noise.block<3, 3>(12, 12) =  (ACC_W * ACC_W) * Eigen::Matrix3d::Identity();
-        noise.block<3, 3>(15, 15) =  (GYR_W * GYR_W) * Eigen::Matrix3d::Identity();
+        noise.block<3, 3>(0, 0) =  _cov_acce_n;
+        noise.block<3, 3>(3, 3) =  _cov_gyro_n;
+        noise.block<3, 3>(6, 6) =  _cov_acce_n;
+        noise.block<3, 3>(9, 9) =  _cov_gyro_n;
+        noise.block<3, 3>(12, 12) =  _cov_acce_w;
+        noise.block<3, 3>(15, 15) =  _cov_gyro_w;
     }
 
-    void push_back(double dt, const Eigen::Vector3d &acc, const Eigen::Vector3d &gyr)
-    {
-        // 相关时间差和传感器数据保留，方便后续repropagate
-        dt_buf.push_back(dt);
-        acc_buf.push_back(acc);
-        gyr_buf.push_back(gyr);
-        propagate(dt, acc, gyr);
-    }
 
     /**
      * @brief 根据新设置的imu零偏重新对该帧进行预积分
@@ -152,33 +142,33 @@ class IntegrationBase
     }
 
     // 计算和给定相邻帧状态量的残差
-    Eigen::Matrix<double, 15, 1> evaluate(const Eigen::Vector3d &Pi, const Eigen::Quaterniond &Qi, const Eigen::Vector3d &Vi, const Eigen::Vector3d &Bai, const Eigen::Vector3d &Bgi,
-                                          const Eigen::Vector3d &Pj, const Eigen::Quaterniond &Qj, const Eigen::Vector3d &Vj, const Eigen::Vector3d &Baj, const Eigen::Vector3d &Bgj)
-    {
-        Eigen::Matrix<double, 15, 1> residuals;
+    // Eigen::Matrix<double, 15, 1> evaluate(const Eigen::Vector3d &Pi, const Eigen::Quaterniond &Qi, const Eigen::Vector3d &Vi, const Eigen::Vector3d &Bai, const Eigen::Vector3d &Bgi,
+    //                                       const Eigen::Vector3d &Pj, const Eigen::Quaterniond &Qj, const Eigen::Vector3d &Vj, const Eigen::Vector3d &Baj, const Eigen::Vector3d &Bgj)
+    // {
+    //     Eigen::Matrix<double, 15, 1> residuals;
 
-        Eigen::Matrix3d dp_dba = jacobian.block<3, 3>(O_P, O_BA);
-        Eigen::Matrix3d dp_dbg = jacobian.block<3, 3>(O_P, O_BG);
+    //     Eigen::Matrix3d dp_dba = jacobian.block<3, 3>(O_P, O_BA);
+    //     Eigen::Matrix3d dp_dbg = jacobian.block<3, 3>(O_P, O_BG);
 
-        Eigen::Matrix3d dq_dbg = jacobian.block<3, 3>(O_R, O_BG);
+    //     Eigen::Matrix3d dq_dbg = jacobian.block<3, 3>(O_R, O_BG);
 
-        Eigen::Matrix3d dv_dba = jacobian.block<3, 3>(O_V, O_BA);
-        Eigen::Matrix3d dv_dbg = jacobian.block<3, 3>(O_V, O_BG);
+    //     Eigen::Matrix3d dv_dba = jacobian.block<3, 3>(O_V, O_BA);
+    //     Eigen::Matrix3d dv_dbg = jacobian.block<3, 3>(O_V, O_BG);
 
-        Eigen::Vector3d dba = Bai - linearized_ba;
-        Eigen::Vector3d dbg = Bgi - linearized_bg;
+    //     Eigen::Vector3d dba = Bai - linearized_ba;
+    //     Eigen::Vector3d dbg = Bgi - linearized_bg;
 
-        Eigen::Quaterniond corrected_delta_q = delta_q * Utility::deltaQ(dq_dbg * dbg);
-        Eigen::Vector3d corrected_delta_v = delta_v + dv_dba * dba + dv_dbg * dbg;
-        Eigen::Vector3d corrected_delta_p = delta_p + dp_dba * dba + dp_dbg * dbg;
+    //     Eigen::Quaterniond corrected_delta_q = delta_q * Utility::deltaQ(dq_dbg * dbg);
+    //     Eigen::Vector3d corrected_delta_v = delta_v + dv_dba * dba + dv_dbg * dbg;
+    //     Eigen::Vector3d corrected_delta_p = delta_p + dp_dba * dba + dp_dbg * dbg;
 
-        residuals.block<3, 1>(O_P, 0) = Qi.inverse() * (0.5 * G * sum_dt * sum_dt + Pj - Pi - Vi * sum_dt) - corrected_delta_p;
-        residuals.block<3, 1>(O_R, 0) = 2 * (corrected_delta_q.inverse() * (Qi.inverse() * Qj)).vec();
-        residuals.block<3, 1>(O_V, 0) = Qi.inverse() * (G * sum_dt + Vj - Vi) - corrected_delta_v;
-        residuals.block<3, 1>(O_BA, 0) = Baj - Bai;
-        residuals.block<3, 1>(O_BG, 0) = Bgj - Bgi;
-        return residuals;
-    }
+    //     residuals.block<3, 1>(O_P, 0) = Qi.inverse() * (0.5 * G * sum_dt * sum_dt + Pj - Pi - Vi * sum_dt) - corrected_delta_p;
+    //     residuals.block<3, 1>(O_R, 0) = 2 * (corrected_delta_q.inverse() * (Qi.inverse() * Qj)).vec();
+    //     residuals.block<3, 1>(O_V, 0) = Qi.inverse() * (G * sum_dt + Vj - Vi) - corrected_delta_v;
+    //     residuals.block<3, 1>(O_BA, 0) = Baj - Bai;
+    //     residuals.block<3, 1>(O_BG, 0) = Bgj - Bgi;
+    //     return residuals;
+    // }
 
     double dt;
     Eigen::Vector3d acc_0, gyr_0;
@@ -202,3 +192,6 @@ class IntegrationBase
     std::vector<Eigen::Vector3d> gyr_buf;
 
 };
+
+
+#endif

@@ -62,7 +62,7 @@ namespace slam_czc
         Eigen::Affine3d transform = Eigen::Affine3d::Identity();
         transform.translation() = TIL_;
         transform.linear() = QIL_.toRotationMatrix();
-        pcl::transformPointCloud(*sorted_data_.pc_, *pc_trans, transform);
+        pcl::transformPointCloud(*sorted_data_.pc_, *pc_trans, transform);  //转到imu坐标系下
 
         pcl::VoxelGrid<PointType> voxel;
         voxel.setLeafSize(0.5, 0.5, 0.5);
@@ -225,7 +225,7 @@ bool Process::predictByIMU()
     {
         if (last_imu_ != nullptr)
         {
-            imu_pre_->integrate(*imu, imu->timestamp_ - last_imu_->timestamp_);
+            imu_pre_->propagate( imu->timestamp_ - last_imu_->timestamp_,imu->acce_, imu->gyro_);
         }
         last_imu_ = imu;
     }
@@ -241,14 +241,14 @@ bool Process::initIMU()
     if (imu_init_.init_success_)
     {
         ROS_INFO("IMU初始化成功");
-
-        imu_pre_ = std::make_shared<IMUPreintegration>(imu_init_.init_bg_, imu_init_.init_ba_, imu_init_.cov_gyro_[0], imu_init_.cov_acce_[0]);
+        last_imu_ = sorted_data_.imu.back();
+        imu_pre_ = std::make_shared<IntegrationBase>(last_imu_->acce_,last_imu_->gyro_,init_ba_, imu_init_.init_bg_, imu_init_.cov_acce_n_, imu_init_.cov_gyro_n_,imu_init_.cov_acce_w_,imu_init_.cov_gyro_w_);
 
         imu_init_flag = false;
         current_state_.timestamp_ = sorted_data_.imu.back().timestamp_;
         current_state_.g_ = imu_init_.gravity_;
         last_state_ = current_state_;
-        last_imu_ = sorted_data_.imu.back();
+        
     }
     return true;
 }
