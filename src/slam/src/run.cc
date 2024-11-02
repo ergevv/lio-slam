@@ -10,7 +10,7 @@ int main(int argc, char ** argv)
 {
     ros::init(argc,argv,"slam");
     
-
+    
     std::string imu_topic = "/imu/data";
     std::string point_cloud_topic = "/velodyne_points";
 

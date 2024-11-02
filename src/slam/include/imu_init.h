@@ -16,7 +16,7 @@ namespace slam_czc
             int init_imu_min_size_ = 2000;
             double max_gyro_var_ = 0.5;
             double max_acce_var_ = 0.05;
-            double gravity_norm_ = 0.981;
+            double gravity_norm_ = 9.81;
         };
 
         StaticIMUInit(Options options = Options()) : options_(options)
@@ -34,9 +34,11 @@ namespace slam_czc
         Eigen::Vector3d gravity_ = Eigen::Vector3d::Zero();
         Eigen::Vector3d cov_gyro_ = Eigen::Vector3d::Zero(); // 陀螺测量噪声协方差（初始化时评估）
         Eigen::Vector3d cov_acce_ = Eigen::Vector3d::Zero(); // 加计测量噪声协方差（初始化时评估）
-        Eigen::Vector3d init_ba_ = Eigen::Vector3d::Zero(); 
-        Eigen::Vector3d init_bg_ = Eigen::Vector3d::Zero(); 
+        Eigen::Vector3d acce_w_var_ = Eigen::Vector3d::Identity();
+        Eigen::Vector3d gyro_w_var_ = Eigen::Vector3d::Identity();
 
+        Eigen::Vector3d init_ba_ = Eigen::Vector3d::Zero();
+        Eigen::Vector3d init_bg_ = Eigen::Vector3d::Zero();
     };
 }
 

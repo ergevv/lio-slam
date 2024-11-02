@@ -252,3 +252,31 @@ bool Process::initIMU()
     }
     return true;
 }
+
+Process::Process(std::string imu_topic, std::string pc_topic)
+{
+    sub_imu = nh.subscribe<sensor_msgs::Imu>(imu_topic, 2000, &Process::processIMU, this, ros::TransportHints().tcpNoDelay()); // 频率100
+
+    sub_point_cloud = nh.subscribe<sensor_msgs::PointCloud2>(pc_topic, 10, &Process::processPointCloud, this, ros::TransportHints().tcpNoDelay()); // 频率10
+
+    pub_path_ = nh.advertise<nav_msgs::Path>("/path", 1);
+
+    readParameters(nh);
+    TIL_ = TIC;
+    QIL_.fromRotationMatrix(RIC);
+    acc_n_ = ACC_N;
+    acc_w_ = ACC_W;
+    gyr_n_ = GYR_N;
+    gyr_w_ = GYR_W;
+    g_ = G;
+
+    imu_init_.acce_w_var_ = Eigen::Matrix3d<double>::Identity()* acc_w_ * acc_w_;
+    imu_init_.gyro_w_var_ = Eigen::Matrix3d<double>::Identity()*gyr_w_ * gyr_w_;
+    imu_init_.options_.gravity_norm_ = g_.z();
+
+    ndt_.setResolution(1.0);             // NDT网格分辨率
+    ndt_.setMaximumIterations(35);       // 最大迭代次数
+    ndt_.setTransformationEpsilon(0.01); // 收敛阈值
+    ndt_.setStepSize(0.1);               // 梯度下降步长
+    ndt_.setNumThreads(4);               // 使用多线程加速
+}

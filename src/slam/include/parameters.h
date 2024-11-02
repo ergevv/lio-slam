@@ -6,11 +6,9 @@
 
 extern std::vector<Eigen::Matrix3d> RIC;
 extern std::vector<Eigen::Vector3d> TIC;
-
-
-
-
-
+extern double ACC_N, ACC_W;
+extern double GYR_N, GYR_W;
+extern Eigen::Vector3d G;
 
 
 #endif
