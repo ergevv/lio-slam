@@ -62,7 +62,7 @@ namespace slam_czc
         Eigen::Affine3d transform = Eigen::Affine3d::Identity();
         transform.translation() = TIL_;
         transform.linear() = QIL_.toRotationMatrix();
-        pcl::transformPointCloud(*sorted_data_.pc_, *pc_trans, transform);  //转到imu坐标系下
+        pcl::transformPointCloud(*sorted_data_.pc_, *pc_trans, transform); // 转到imu坐标系下
 
         pcl::VoxelGrid<PointType> voxel;
         voxel.setLeafSize(0.5, 0.5, 0.5);
@@ -74,7 +74,7 @@ namespace slam_czc
         if (pc_first_flag_)
         {
             ndt_.setInputTarget(*pc_trans);
-            imu_pre_ = std::make_shared<IMUPreintegration>(imu_init_.init_bg_, imu_init_.init_ba_, imu_init_.cov_gyro_[0], imu_init_.cov_acce_[0]);
+            imu_pre_ = std::make_shared<IntegrationBase>(last_imu_->acce_, last_imu_->gyro_, imu_init_.init_ba_, imu_init_.init_bg_, imu_init_.cov_acce_n_, imu_init_.cov_gyro_n_, imu_init_.cov_acce_w_, imu_init_.cov_gyro_w_);
             pc_first_flag_ = false;
 
             // 发送一次位姿到rviz
@@ -85,7 +85,7 @@ namespace slam_czc
         ndt_.setInputSource(*pc_trans_filter);
 
         // 预测当前位姿
-        current_state_ = imu_pre_->Predict(last_state_, imu_init.gravity_);
+        current_state_ = imu_pre_->predict(last_state_, imu_init.gravity_);
 
         ndt_pose_ = current_state_.getTransform();
         ndt_pose_ = ndt.align(ndt_pose_);
@@ -225,7 +225,7 @@ bool Process::predictByIMU()
     {
         if (last_imu_ != nullptr)
         {
-            imu_pre_->propagate( imu->timestamp_ - last_imu_->timestamp_,imu->acce_, imu->gyro_);
+            imu_pre_->propagate(imu->timestamp_ - last_imu_->timestamp_, imu->acce_, imu->gyro_);
         }
         last_imu_ = imu;
     }
@@ -242,13 +242,12 @@ bool Process::initIMU()
     {
         ROS_INFO("IMU初始化成功");
         last_imu_ = sorted_data_.imu.back();
-        imu_pre_ = std::make_shared<IntegrationBase>(last_imu_->acce_,last_imu_->gyro_,init_ba_, imu_init_.init_bg_, imu_init_.cov_acce_n_, imu_init_.cov_gyro_n_,imu_init_.cov_acce_w_,imu_init_.cov_gyro_w_);
+        imu_pre_ = std::make_shared<IntegrationBase>(last_imu_->acce_, last_imu_->gyro_, imu_init_.init_ba_, imu_init_.init_bg_, imu_init_.cov_acce_n_, imu_init_.cov_gyro_n_, imu_init_.cov_acce_w_, imu_init_.cov_gyro_w_);
 
         imu_init_flag = false;
         current_state_.timestamp_ = sorted_data_.imu.back().timestamp_;
         current_state_.g_ = imu_init_.gravity_;
         last_state_ = current_state_;
-        
     }
     return true;
 }
@@ -270,8 +269,8 @@ Process::Process(std::string imu_topic, std::string pc_topic)
     gyr_w_ = GYR_W;
     g_ = G;
 
-    imu_init_.acce_w_var_ = Eigen::Matrix3d<double>::Identity()* acc_w_ * acc_w_;
-    imu_init_.gyro_w_var_ = Eigen::Matrix3d<double>::Identity()*gyr_w_ * gyr_w_;
+    imu_init_.acce_w_var_ = Eigen::Matrix3d<double>::Identity() * acc_w_ * acc_w_;
+    imu_init_.gyro_w_var_ = Eigen::Matrix3d<double>::Identity() * gyr_w_ * gyr_w_;
     imu_init_.options_.gravity_norm_ = g_.z();
 
     ndt_.setResolution(1.0);             // NDT网格分辨率

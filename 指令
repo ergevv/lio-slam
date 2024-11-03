@@ -82,3 +82,6 @@ TCP 协议有一个 Nagle 算法，默认情况下，当发送小数据包时，
 */
 
     // 在ROS中，当你订阅一个话题时，通常会接收到一个智能指针（如 std::shared_ptr 或 boost::shared_ptr），这个智能指针指向一个消息对象。在这种情况下，sensor_msgs::PointCloud2::ConstPtr 是一个指向 sensor_msgs::PointCloud2 消息的常量智能指针。
+
+
+ceres中，自动求导类型是ceres::Jet，手动求导是double

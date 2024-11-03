@@ -9,9 +9,9 @@ namespace slam_czc
 
     struct IMUFactor
     {
-        IMUFactor(std::shared_ptr<IMUPreintegration> imu_pre,
+        IMUFactor(std::shared_ptr<IntegrationBase> imu_pre,
                   const Eigen::Vector3d g)
-            : imu_pre_(imu_pre), g_(g), dt_(imu_pre.dt_) { sqrt_info = Eigen::LLT<Eigen::Matrix<double, 15, 15>>(imu_pre_->cov_.inverse()).matrixL().transpose(); }
+            : imu_pre_(imu_pre), g_(g), dt_(imu_pre.dt_) { sqrt_info = Eigen::LLT<Eigen::Matrix<double, 15, 15>>(imu_pre_->covariance.inverse()).matrixL().transpose(); }
 
         template <typename T>
         // last_q_, last_p_, last_v_,  last_bg_, last_ba_,current_q_, current_p_, current_v_,current_bg_, current_ba_
@@ -29,8 +29,8 @@ namespace slam_czc
             Eigen::Map<const Eigen::Vector3d> ba_current(current_ba_);
             Eigen::Map<Eigen::Matrix<double, 15, 1>> residual(residuals);
 
-            const Eigen::Vector3d delta_p = imu_pre_->getDeltaPosition(bg, ba);
-            const Eigen::Vector3d delta_v = imu_pre_->getDeltaVelocity(bg, ba);
+            const Eigen::Vector3d delta_p = imu_pre_->getDeltaPosition(bg_current, ba_current);
+            const Eigen::Vector3d delta_v = imu_pre_->getDeltaVelocity(bg_current, ba_current);
             const Eigen::Quaterniond delta_q = imu_pre_->getDeltaRotation(bg);
             const Eigen::Vector3d delta_R = delta_q.ToRotationMatrix();
 
@@ -56,15 +56,15 @@ namespace slam_czc
             return true;
         }
 
-        static ceres::CostFunction *Create(const std::shared_ptr<IMUPreintegration> imu_pre_,
+        static ceres::CostFunction *Create(const std::shared_ptr<IntegrationBase> imu_pre,
                                            const Eigen::Vector3d g)
         {
             return (new ceres::AutoDiffCostFunction<
                     IMUFactor, 15, 4, 3, 3, 3, 3, 4, 3, 3, 3, 3>( // 第一个参数是CostFunction，第二个参数是残差的维数，第三个参数是参数块的维数，上一次旋转矩阵4维，平移3维，速度3维，零偏两个3维，这次的旋转4维、平移、速度3维、零偏两个3维
-                new IMUFactor(pre, g)));
+                new IMUFactor(imu_pre, g)));
         }
 
-        std::shared_ptr<IMUPreintegration> imu_pre_ = nullptr;
+        std::shared_ptr<IntegrationBase> imu_pre_ = nullptr;
         Eigen::Vector3d g_;
         double dt_ = 0;
         Eigen::Matrix<double, 15, 15> sqrt_info;

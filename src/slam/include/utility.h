@@ -113,6 +113,8 @@ namespace slam_czc
     template <typename S>
     inline Eigen::Matrix<S, 3, 3> matFromArray(const std::vector<S> &v);
 
+    template <typename Derived>
+    static Eigen::Quaternion<typename Derived::Scalar> theta2Q(const Eigen::MatrixBase<Derived> &theta)
 }
 
 #endif
