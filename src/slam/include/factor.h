@@ -1,7 +1,7 @@
 #ifndef FACTOR_H
 #define FACTOR_H
 #include "utility.h"
-#include "imu_preintegration.h"
+#include "integration_base.h"
 #include "ceres/ceres.h"
 
 namespace slam_czc
@@ -11,28 +11,28 @@ namespace slam_czc
     {
         IMUFactor(std::shared_ptr<IntegrationBase> imu_pre,
                   const Eigen::Vector3d g)
-            : imu_pre_(imu_pre), g_(g), dt_(imu_pre.dt_) { sqrt_info = Eigen::LLT<Eigen::Matrix<double, 15, 15>>(imu_pre_->covariance.inverse()).matrixL().transpose(); }
+            : imu_pre_(imu_pre), g_(g), dt_(imu_pre->sum_dt) { sqrt_info = Eigen::LLT<Eigen::Matrix<double, 15, 15>>(imu_pre_->covariance.inverse()).matrixL().transpose(); }
 
         template <typename T>
         // last_q_, last_p_, last_v_,  last_bg_, last_ba_,current_q_, current_p_, current_v_,current_bg_, current_ba_
         bool operator()(const T *last_q_, const T *last_p_, const T *last_v_, const T *last_bg_, const T *last_ba_, const T *current_q_, const T *current_p_, const T *current_v_, const T *current_bg_, const T *current_ba_, T *residuals) const
         {
-            Eigen::Map<const Eigen::Quaterniond> q_last(last_q_);
-            Eigen::Map<const Eigen::Vector3d> p_last(last_p_);
-            Eigen::Map<const Eigen::Vector3d> v_last(last_v_);
-            Eigen::Map<const Eigen::Vector3d> bg_last(last_bg_);
-            Eigen::Map<const Eigen::Vector3d> ba_last(last_ba_);
-            Eigen::Map<const Eigen::Quaterniond> q_current(current_q_);
-            Eigen::Map<const Eigen::Vector3d> p_current(current_p_);
-            Eigen::Map<const Eigen::Vector3d> v_current(current_v_);
-            Eigen::Map<const Eigen::Vector3d> bg_current(current_bg_);
-            Eigen::Map<const Eigen::Vector3d> ba_current(current_ba_);
-            Eigen::Map<Eigen::Matrix<double, 15, 1>> residual(residuals);
+            Eigen::Map<const Eigen::Quaternion<T>> q_last(last_q_);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> p_last(last_p_);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> v_last(last_v_);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> bg_last(last_bg_);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> ba_last(last_ba_);
+            Eigen::Map<const Eigen::Quaternion<T>> q_current(current_q_);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> p_current(current_p_);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> v_current(current_v_);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> bg_current(current_bg_);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> ba_current(current_ba_);
+            Eigen::Map<Eigen::Matrix<T, 15, 1>> residual(residuals);
 
-            const Eigen::Vector3d delta_p = imu_pre_->getDeltaPosition(bg_current, ba_current);
-            const Eigen::Vector3d delta_v = imu_pre_->getDeltaVelocity(bg_current, ba_current);
-            const Eigen::Quaterniond delta_q = imu_pre_->getDeltaRotation(bg);
-            const Eigen::Vector3d delta_R = delta_q.ToRotationMatrix();
+            const Eigen::Matrix<T,3,1> delta_p = imu_pre_->getDeltaPosition(bg_current, ba_current);
+            const Eigen::Matrix<T,3,1> delta_v = imu_pre_->getDeltaVelocity(bg_current, ba_current);
+            const Eigen::Quaternion<T> delta_q = imu_pre_->getDeltaRotation(bg_current);
+            const Eigen::Matrix<T,3,1> delta_R = delta_q.ToRotationMatrix();
 
             Eigen::Matrix3d R_last = q_last.ToRotationMatrix().transpose();
             Eigen::Matrix3d eR = delta_R.transpose() * R_last * q_current.ToRotationMatrix().transpose(); // 两时刻的姿态与预积分姿态应该一致
@@ -81,12 +81,12 @@ namespace slam_czc
         template <typename T>
         bool operator()(const T *q, const T *p, const T *v, const T *bg, const T *ba, T *residuals) const
         {
-            Eigen::Map<const Eigen::Quaterniond> q_last(q);
-            Eigen::Map<const Eigen::Vector3d> p_last(p);
-            Eigen::Map<const Eigen::Vector3d> v_last(v);
-            Eigen::Map<const Eigen::Vector3d> bg_last(bg);
-            Eigen::Map<const Eigen::Vector3d> ba_last(ba);
-            Eigen::Map<Eigen::Matrix<double, 15, 1>> residual(residuals);
+            Eigen::Map<const Eigen::Quaternion<T>> q_last(q);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> p_last(p);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> v_last(v);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> bg_last(bg);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> ba_last(ba);
+            Eigen::Map<Eigen::Matrix<T, 15, 1>> residual(residuals);
 
             Eigen::Matrix3d eR = state_.q_.inverse().toRotationMatrix() * q_last.toRotationMatrix(); //
             Eigen::AngleAxisd aa(eR);
@@ -112,7 +112,7 @@ namespace slam_czc
 
         State state_;
         Eigen::Matrix<double, 15, 15> prior_info_;
-    }
+    };
 
     struct PointCloudFactor
     {
@@ -123,18 +123,18 @@ namespace slam_czc
             ndt_p_ = pc_pose.block<3, 1>(0, 3);
 
             // 提取旋转部分为旋转矩阵
-            Eigen::Matrix3f rotation_matrix = transform.block<3, 3>(0, 0);
+            Eigen::Matrix3f rotation_matrix = pc_pose.block<3, 3>(0, 0);
 
             // 将旋转矩阵转换为四元数
-            ndt_q_.fromRotationMatrix(rotation_matrix);
+            ndt_q_ = Eigen::Quaterniond(rotation_matrix);
         }
 
         template <typename T>
         bool operator()(const T *q, const T *p, T *residuals) const
         {
-            Eigen::Map<const Eigen::Quaterniond> q_current(q);
-            Eigen::Map<const Eigen::Vector3d> p_current(p);
-            Eigen::Map<Eigen::Matrix<double, 6, 1>> residual(residuals);
+            Eigen::Map<const Eigen::Quaternion<T>> q_current(q);
+            Eigen::Map<const Eigen::Matrix<T,3,1>> p_current(p);
+            Eigen::Map<Eigen::Matrix<T, 6, 1>> residual(residuals);
 
             Eigen::Matrix3d eR = ndt_q_.inverse().toRotationMatrix() * q_current.toRotationMatrix();
             Eigen::AngleAxisd aa(eR);

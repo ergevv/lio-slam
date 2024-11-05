@@ -47,7 +47,7 @@ namespace slam_czc
         //计算去除重力后的协方差
         computeMeanAndCov(init_imu_deque_, mean_acce, cov_acce_n_,
                                 [this](const IMU& imu) { return imu.acce_ + gravity_; });
-        if(cov_gyro_.norm()>options_.max_gyro_var_ || cov_acce_.norm()>options_.max_acce_var_)
+        if(cov_gyro_n_.norm()>options_.max_gyro_var_ || cov_acce_n_.norm()>options_.max_acce_var_)
         {
             ROS_INFO("测量噪声太大");
             return false;

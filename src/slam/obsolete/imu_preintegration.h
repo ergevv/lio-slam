@@ -12,11 +12,11 @@ namespace slam_czc
         void integrate(const IMU &imu, double dt);
         State predict(State start, Eigen::Vector3d g);
 
-        Eigen::Quaterniond getDeltaRotation(const Vec3d &bg) {}
+        Eigen::Quaterniond getDeltaRotation(const Vec3d &bg) ;
 
-        Eigen::Vector3d getDeltaVelocity(const Eigen::Vector3d &bg, const Eigen::Vector3d &ba){}
+        Eigen::Vector3d getDeltaVelocity(const Eigen::Vector3d &bg, const Eigen::Vector3d &ba);
 
-        Eigen::Vector3d getDeltaPosition(const Eigen::Vector3d &bg, const Eigen::Vector3d &ba){}
+        Eigen::Vector3d getDeltaPosition(const Eigen::Vector3d &bg, const Eigen::Vector3d &ba);
 
         Eigen::Vector3d bg_ = Eigen::Vector3d::Zero();
         Eigen::Vector3d ba_ = Eigen::Vector3d::Zero();

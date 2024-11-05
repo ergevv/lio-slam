@@ -234,7 +234,7 @@ add_library(
   src/process.cc
   src/imu_init.cc
   src/utility.cc
-  src/imu_preintegration.cc
+  #src/imu_preintegration.cc
 )
 target_include_directories(
   lib_slam PRIVATE

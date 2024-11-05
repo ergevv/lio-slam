@@ -55,7 +55,7 @@ namespace slam_czc
     {
         double pc_begin_time_ = 0; // 仿真不考虑运动畸变，故没用
         double pc_end_time_ = 0;
-        std::deque<imu_ptr> imu_;
+        std::deque<ImuPtr> imu_;
         PointType::Ptr pc_ = nullptr;
     };
 
@@ -77,15 +77,15 @@ namespace slam_czc
     }
 
     Eigen::Matrix3d wedge(const Eigen::Vector3d &v);
-    Matrix3d rightJacobian(const Vector3d &phi);
-    Eigen::Matrix3d inverseRightJacobian(const Vector3d &phi);
-    Eigen::Matrix3d vectorToR(const Vector3d &theta);
+    Eigen::Matrix3d rightJacobian(const Eigen::Vector3d &phi);
+    Eigen::Matrix3d inverseRightJacobian(const Eigen::Vector3d &phi);
+    Eigen::Matrix3d vectorToR(const Eigen::Vector3d &theta);
 
     class State
     {
     public:
         State(double time) : timestamp_(time) {}
-        State(double time, Eigen::Quaterniond q, Eigen::Vector3d p, Eigen::Vector3d v, Eigen::Vector3d bg, Eigen::Vector3d bg) : timestamp_(time), q_(q), p_(p), v_(v), bg_(bg), ba_(ba) {}
+        State(double time, Eigen::Quaterniond q, Eigen::Vector3d p, Eigen::Vector3d v, Eigen::Vector3d bg, Eigen::Vector3d ba) : timestamp_(time), q_(q), p_(p), v_(v), bg_(bg), ba_(ba) {}
 
         Eigen::Matrix4f getTransform();
         double timestamp_ = 0;
@@ -94,7 +94,7 @@ namespace slam_czc
         Eigen::Vector3d v_ = Eigen::Vector3d::Zero();
         Eigen::Vector3d bg_ = Eigen::Vector3d::Zero();
         Eigen::Vector3d ba_ = Eigen::Vector3d::Zero();
-        Eigen::Vector3d g_(0, 0, 9.81);
+        Eigen::Vector3d g_{0, 0, 9.81};
     };
 
     class Pose
@@ -114,7 +114,7 @@ namespace slam_czc
     inline Eigen::Matrix<S, 3, 3> matFromArray(const std::vector<S> &v);
 
     template <typename Derived>
-    static Eigen::Quaternion<typename Derived::Scalar> theta2Q(const Eigen::MatrixBase<Derived> &theta)
+    static Eigen::Quaternion<typename Derived::Scalar> theta2Q(const Eigen::MatrixBase<Derived> &theta);
 }
 
 #endif

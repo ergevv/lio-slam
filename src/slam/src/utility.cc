@@ -3,7 +3,7 @@
 namespace slam_czc
 {
 
-    imu_ptr convertToIMU(const sensor_msgs::Imu::ConstPtr &imu_msg)
+    ImuPtr convertToIMU(const sensor_msgs::Imu::ConstPtr &imu_msg)
     {
         double timestamp = imu_msg->header.stamp.toSec();
         Eigen::Vector3d gyro(imu_msg->angular_velocity.x, imu_msg->angular_velocity.y, imu_msg->angular_velocity.z);
@@ -29,7 +29,7 @@ namespace slam_czc
     }
 
     // 计算右雅可比矩阵
-    Eigen::Matrix3d rightJacobian(const Vector3d &phi)
+    Eigen::Matrix3d rightJacobian(const Eigen::Vector3d &phi)
     {
         double phi_norm = phi.norm();
         if (phi_norm < 1e-5)
@@ -46,7 +46,7 @@ namespace slam_czc
     }
 
     // 计算右雅可比矩阵的逆
-    Eigen::Matrix3d inverseRightJacobian(const Vector3d &phi)
+    Eigen::Matrix3d inverseRightJacobian(const Eigen::Vector3d &phi)
     {
         double phi_norm = phi.norm();
         if (phi_norm < 1e-5)
@@ -63,7 +63,7 @@ namespace slam_czc
     }
 
     // 函数：从旋转矢量到旋转矩阵
-    Eigen::Matrix3d vectorToR(const Vector3d &theta)
+    Eigen::Matrix3d vectorToR(const Eigen::Vector3d &theta)
     {
         Eigen::Matrix3d R;
         double theta_norm = theta.norm();

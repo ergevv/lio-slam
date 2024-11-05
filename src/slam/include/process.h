@@ -8,6 +8,7 @@
 #include "ceres/ceres.h"
 #include "factor.h"
 #include "parameters.h"
+#include <nav_msgs/Path.h>
 
 namespace slam_czc
 {
@@ -17,7 +18,7 @@ namespace slam_czc
         /* data */
     public:
         Process(std::string imu_topic, std::string pc_topic);
-        void addIMU(slam_czc::imu_ptr imu)
+        void addIMU(slam_czc::ImuPtr imu)
         {
             last_timestamp_imu_ = imu->timestamp_;
             imu_deque_.push_back(imu);
@@ -51,20 +52,22 @@ namespace slam_czc
         bool alignByPC();
         bool optimize();
         bool vecter2double();
+        void updatePath(const State &state);
 
+        
         ros::NodeHandle nh;
         ros::Subscriber sub_imu;
         ros::Subscriber sub_point_cloud;
         ros::Publisher pub_path_;
 
-        std::string odom_frame_id = "odom";
+        std::string odom_frame_id_ = "odom";
 
-        nav_msgs::Path global_path;
+        nav_msgs::Path global_path_;
 
         std::shared_ptr<IntegrationBase> imu_pre_ = nullptr;
         State current_state_;
         State last_state_;
-        std::deque<slam_czc::imu_ptr> imu_deque_;
+        std::deque<slam_czc::ImuPtr> imu_deque_;
         std::deque<slam_czc::PointType::Ptr> pc_deque_;
         double last_timestamp_imu_ = -1;
         bool pc_pushed_ = false;
@@ -73,12 +76,12 @@ namespace slam_czc
         bool imu_init_flag = false;
         StaticIMUInit imu_init_;
         double last_timestamp_pc_ = -1;
-        IMUPtr last_imu_ = nullptr;
+        ImuPtr last_imu_ = nullptr;
 
         bool pc_first_flag_ = true;
         Eigen::Vector3d TIL_{-0.17, 0, 0.255};
         Eigen::Quaterniond QIL_ = Eigen::Quaterniond::Identity();
-        pcl::NormalDistributionsTransform<PointType, PointType> ndt_;
+        pcl::NormalDistributionsTransform<Point, Point> ndt_;  //模板得是点的类型`
         Eigen::Matrix4f ndt_pose_;
         Eigen::Matrix<double, 15, 15> prior_info_ = Eigen::Matrix<double, 15, 15>::Identity();
         double current_p_[3];
