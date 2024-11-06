@@ -1,7 +1,7 @@
 #include "parameters.h"
 
-std::vector<Eigen::Matrix3d> RIC;
-std::vector<Eigen::Vector3d> TIC;
+Eigen::Matrix3d RIC;
+Eigen::Vector3d TIC;
 Eigen::Vector3d G{0.0, 0.0, 9.8};
 double ACC_N, ACC_W;
 double GYR_N, GYR_W;

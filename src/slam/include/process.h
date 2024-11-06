@@ -54,7 +54,7 @@ namespace slam_czc
         bool vecter2double();
         void updatePath(const State &state);
 
-        
+
         ros::NodeHandle nh;
         ros::Subscriber sub_imu;
         ros::Subscriber sub_point_cloud;

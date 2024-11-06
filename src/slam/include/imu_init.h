@@ -38,8 +38,8 @@ namespace slam_czc
         Eigen::Vector3d init_bg_ = Eigen::Vector3d::Zero();
         Eigen::Vector3d cov_gyro_n_ = Eigen::Vector3d::Zero(); // 陀螺测量噪声协方差（初始化时评估）
         Eigen::Vector3d cov_acce_n_ = Eigen::Vector3d::Zero(); // 加计测量噪声协方差（初始化时评估）
-        Eigen::Vector3d cov_acce_w_ = Eigen::Vector3d::Identity();
-        Eigen::Vector3d cov_gyro_w_ = Eigen::Vector3d::Identity();
+        Eigen::Matrix3d cov_acce_w_ = Eigen::Matrix3d::Identity();
+        Eigen::Matrix3d cov_gyro_w_ = Eigen::Matrix3d::Identity();
     };
 }
 

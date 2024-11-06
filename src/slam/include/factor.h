@@ -116,14 +116,14 @@ namespace slam_czc
 
     struct PointCloudFactor
     {
-        PointCloudFactor(const Eigen::Matrix4f &pc_pose, const Eigen::Matrix<double, 6, 6> &ndt_info)
+        PointCloudFactor(const Eigen::Matrix4d &pc_pose, const Eigen::Matrix<double, 6, 6> &ndt_info)
         {
             ndt_info_ = Eigen::LLT<Eigen::Matrix<double, 6, 6>>(ndt_info.inverse()).matrixL().transpose();
             // 提取平移部分
             ndt_p_ = pc_pose.block<3, 1>(0, 3);
 
             // 提取旋转部分为旋转矩阵
-            Eigen::Matrix3f rotation_matrix = pc_pose.block<3, 3>(0, 0);
+            Eigen::Matrix3d rotation_matrix = pc_pose.block<3, 3>(0, 0);
 
             // 将旋转矩阵转换为四元数
             ndt_q_ = Eigen::Quaterniond(rotation_matrix);
@@ -145,7 +145,7 @@ namespace slam_czc
             return true;
         }
 
-        static ceres::CostFunction *Create(const Eigen::Matrix4f &pc_pose, Eigen::Matrix<double, 6, 6> ndt_info)
+        static ceres::CostFunction *Create(const Eigen::Matrix4d &pc_pose, Eigen::Matrix<double, 6, 6> ndt_info)
         {
             return (new ceres::AutoDiffCostFunction<
                     PointCloudFactor, 6, 4, 3>(new PointCloudFactor(pc_pose, ndt_info)));

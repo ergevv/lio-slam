@@ -87,9 +87,10 @@ namespace slam_czc
         // 预测当前位姿
         current_state_ = imu_pre_->predict(last_state_, imu_init_.gravity_);
 
+        PointType::Ptr output (new PointType);
         ndt_pose_ = current_state_.getTransform();
-        ndt_pose_ = ndt_.align(ndt_pose_);
-
+        ndt_.align(*output , ndt_pose_);
+        ndt_pose_ = ndt_.getFinalTransformation();
         optimize();
     }
 
@@ -130,7 +131,7 @@ namespace slam_czc
         // 残差：imu得到的位资、lidar的位资
         Eigen::Matrix<double, 6, 6> ndt_info_ = Eigen::Matrix<double, 6, 6>::Identity(); // 后续需要优化
         ceres::CostFunction *pc_factor = PointCloudFactor::Create(
-            ndt_pose_, ndt_info_);
+            ndt_pose_.cast<double>(), ndt_info_);
         problem.AddResidualBlock(pc_factor, loss_function, current_q_, current_p_);
 
         ceres::Solver::Options options;
@@ -242,11 +243,11 @@ namespace slam_czc
         if (imu_init_.init_success_)
         {
             ROS_INFO("IMU初始化成功");
-            last_imu_ = sorted_data_.imu.back();
+            last_imu_ = sorted_data_.imu_.back();
             imu_pre_ = std::make_shared<IntegrationBase>(last_imu_->acce_, last_imu_->gyro_, imu_init_.init_ba_, imu_init_.init_bg_, imu_init_.cov_acce_n_, imu_init_.cov_gyro_n_, imu_init_.cov_acce_w_, imu_init_.cov_gyro_w_);
 
             imu_init_flag = false;
-            current_state_.timestamp_ = sorted_data_.imu.back().timestamp_;
+            current_state_.timestamp_ = sorted_data_.imu_.back()->timestamp_;
             current_state_.g_ = imu_init_.gravity_;
             last_state_ = current_state_;
         }
@@ -263,22 +264,22 @@ namespace slam_czc
 
         readParameters(nh);
         TIL_ = TIC;
-        QIL_.fromRotationMatrix(RIC);
+        QIL_ = Eigen::Quaterniond(RIC);
         acc_n_ = ACC_N;
         acc_w_ = ACC_W;
         gyr_n_ = GYR_N;
         gyr_w_ = GYR_W;
         g_ = G;
 
-        imu_init_.acce_w_var_ = Eigen::Matrix3d<double>::Identity() * acc_w_ * acc_w_;
-        imu_init_.gyro_w_var_ = Eigen::Matrix3d<double>::Identity() * gyr_w_ * gyr_w_;
+        imu_init_.cov_acce_w_ = Eigen::Matrix3d::Identity() * acc_w_ * acc_w_;
+        imu_init_.cov_gyro_w_ = Eigen::Matrix3d::Identity() * gyr_w_ * gyr_w_;
         imu_init_.options_.gravity_norm_ = g_.z();
 
         ndt_.setResolution(1.0);             // NDT网格分辨率
         ndt_.setMaximumIterations(35);       // 最大迭代次数
         ndt_.setTransformationEpsilon(0.01); // 收敛阈值
         ndt_.setStepSize(0.1);               // 梯度下降步长
-        ndt_.setNumThreads(4);               // 使用多线程加速
+        //ndt_.setNumThreads(4);               // 使用多线程加速
     }
 
 }

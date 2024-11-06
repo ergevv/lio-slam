@@ -9,7 +9,7 @@ public:
     IntegrationBase() = delete;
     IntegrationBase(const Eigen::Vector3d &_acc_0, const Eigen::Vector3d &_gyr_0,
                     const Eigen::Vector3d &_linearized_ba, const Eigen::Vector3d &_linearized_bg, const Eigen::Vector3d &_cov_acce_n,
-                    const Eigen::Vector3d &_cov_gyro_n, const Eigen::Vector3d &_cov_acce_w, const Eigen::Vector3d &_cov_gyro_w)
+                    const Eigen::Vector3d &_cov_gyro_n, const Eigen::Matrix3d &_cov_acce_w, const Eigen::Matrix3d &_cov_gyro_w)
         : acc_0{_acc_0}, gyr_0{_gyr_0}, linearized_acc{_acc_0}, linearized_gyr{_gyr_0},
           linearized_ba{_linearized_ba}, linearized_bg{_linearized_bg},
           jacobian{Eigen::Matrix<double, 15, 15>::Identity()}, covariance{Eigen::Matrix<double, 15, 15>::Zero()},
@@ -139,9 +139,9 @@ public:
 
     slam_czc::State predict(slam_czc::State start, Eigen::Vector3d g)
     {
-        Eigen::Quaterniond qj = start.q_ * delta_q;
+        Eigen::Quaterniond qj = Eigen::Quaterniond(start.q_.toRotationMatrix() * delta_q.toRotationMatrix());
         Eigen::Vector3d vj = start.q_.toRotationMatrix() * delta_v + start.v_ + g * sum_dt;
-        Eigen::Vector3d pj = start.q_.toRotationMatrix() * delta_q + start.p_ + start.v_ * sum_dt + 0.5f * g * sum_dt * sum_dt;
+        Eigen::Vector3d pj = start.q_.toRotationMatrix() * delta_p + start.p_ + start.v_ * sum_dt + 0.5d * g * sum_dt * sum_dt;
 
         auto state = slam_czc::State(start.timestamp_ + sum_dt, qj, pj, vj, linearized_bg, linearized_ba);
 

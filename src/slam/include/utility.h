@@ -76,16 +76,15 @@ namespace slam_czc
               (len - 1);
     }
 
-    Eigen::Matrix3d wedge(const Eigen::Vector3d &v);
-    Eigen::Matrix3d rightJacobian(const Eigen::Vector3d &phi);
-    Eigen::Matrix3d inverseRightJacobian(const Eigen::Vector3d &phi);
-    Eigen::Matrix3d vectorToR(const Eigen::Vector3d &theta);
+
+
 
     class State
     {
     public:
-        State(double time) : timestamp_(time) {}
-        State(double time, Eigen::Quaterniond q, Eigen::Vector3d p, Eigen::Vector3d v, Eigen::Vector3d bg, Eigen::Vector3d ba) : timestamp_(time), q_(q), p_(p), v_(v), bg_(bg), ba_(ba) {}
+        explicit State() {}
+        explicit State(double time) : timestamp_(time) {}
+        explicit State(double time, Eigen::Quaterniond q, Eigen::Vector3d p, Eigen::Vector3d v, Eigen::Vector3d bg, Eigen::Vector3d ba) : timestamp_(time), q_(q), p_(p), v_(v), bg_(bg), ba_(ba) {}
 
         Eigen::Matrix4f getTransform();
         double timestamp_ = 0;
