@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
 )
-
+find_package(YAML-CPP REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
 set(Ceres_DIR "/home/erge/cpp/package/ceres-1.14.0-install/lib/cmake/Ceres") 
@@ -235,6 +235,7 @@ add_library(
   src/imu_init.cc
   src/utility.cc
   #src/imu_preintegration.cc
+  src/parameters.cc
 )
 target_include_directories(
   lib_slam PRIVATE
@@ -242,10 +243,19 @@ target_include_directories(
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
 	${PCL_INCLUDE_DIRS}
+  ${CERES_INCLUDE_DIRS}
   ${G2O_INCLUDE_DIRS}  
+  ${YAML_CPP_INCLUDE_DIR}
   )
 
-
+target_link_libraries(
+  lib_slam
+  ${catkin_LIBRARIES} 
+  ${PCL_LIBRARIES}
+  ${CERES_LIBRARIES}
+  ${G2O_LIBRARIES}
+  ${YAML_CPP_LIBRARIES}
+  )
 
 target_link_libraries(
   run_slam

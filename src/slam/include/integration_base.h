@@ -147,25 +147,36 @@ public:
 
         return state;
     }
-    template <typename T>
-    Eigen::Quaternion<T> getDeltaRotation(const Eigen::Matrix<T, 3, 1> &bg)
+
+
+    // 修改 getDeltaRotation 方法签名以支持 Eigen::MatrixBase
+    template <typename Derived>
+    Eigen::Quaternion<typename Derived::Scalar> getDeltaRotation(const Eigen::MatrixBase<Derived> &bg) const
     {
-        Eigen::Matrix3d dq_dbg = jacobian.block<3, 3>(3, 12);
-        return delta_q * slam_czc::theta2Q(dq_dbg * (bg - linearized_bg));
+        using ScalarType = typename Derived::Scalar;
+        Eigen::Matrix<ScalarType, 3, 3> dq_dbg = jacobian.block<3, 3>(3, 12).cast<ScalarType>();
+        Eigen::Matrix<ScalarType, 3, 1> tem = dq_dbg * (bg - linearized_bg.cast<ScalarType>());
+        return delta_q.cast<ScalarType>() * slam_czc::theta2Q(tem);
     }
-    template <typename T>
-    Eigen::Matrix<T, 3, 1> getDeltaVelocity(const Eigen::Matrix<T, 3, 1> &bg, const Eigen::Matrix<T, 3, 1> &ba)
+
+    // 修改 getDeltaVelocity 方法签名以支持 Eigen::MatrixBase
+    template <typename Derived1, typename Derived2>
+    Eigen::Matrix<typename Derived1::Scalar, 3, 1> getDeltaVelocity(const Eigen::MatrixBase<Derived1> &bg, const Eigen::MatrixBase<Derived2> &ba) const
     {
-        Eigen::Matrix3d dv_dba = jacobian.block<3, 3>(6, 9);
-        Eigen::Matrix3d dv_dbg = jacobian.block<3, 3>(6, 12);
-        return delta_v + dv_dbg * (bg - linearized_bg) + dv_dba * (ba - linearized_ba);
+        using ScalarType = typename Derived1::Scalar;
+        Eigen::Matrix<ScalarType, 3, 3> dv_dba = jacobian.block<3, 3>(6, 9).cast<ScalarType>();
+        Eigen::Matrix<ScalarType, 3, 3> dv_dbg = jacobian.block<3, 3>(6, 12).cast<ScalarType>();
+        return delta_v.cast<ScalarType>() + dv_dbg * (bg - linearized_bg.cast<ScalarType>()) + dv_dba * (ba - linearized_ba.cast<ScalarType>());
     }
-    template <typename T>
-    Eigen::Matrix<T, 3, 1> getDeltaPosition(const Eigen::Matrix<T, 3, 1> &bg, const Eigen::Matrix<T, 3, 1> &ba)
+
+    // 修改 getDeltaPosition 方法签名以支持 Eigen::MatrixBase
+    template <typename Derived1, typename Derived2>
+    Eigen::Matrix<typename Derived1::Scalar, 3, 1> getDeltaPosition(const Eigen::MatrixBase<Derived1> &bg, const Eigen::MatrixBase<Derived2> &ba) const
     {
-        Eigen::Matrix3d dp_dba = jacobian.block<3, 3>(0, 9);
-        Eigen::Matrix3d dp_dbg = jacobian.block<3, 3>(0, 12);
-        return delta_p + dp_dbg * (bg - linearized_bg) + dp_dba * (ba - linearized_ba);
+        using ScalarType = typename Derived1::Scalar;
+        Eigen::Matrix<ScalarType, 3, 3> dp_dba = jacobian.block<3, 3>(0, 9).cast<ScalarType>();
+        Eigen::Matrix<ScalarType, 3, 3> dp_dbg = jacobian.block<3, 3>(0, 12).cast<ScalarType>();
+        return delta_p.cast<ScalarType>() + dp_dbg * (bg - linearized_bg.cast<ScalarType>()) + dp_dba * (ba - linearized_ba.cast<ScalarType>());
     }
 
     double dt;

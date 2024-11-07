@@ -92,6 +92,8 @@ namespace slam_czc
         ndt_.align(*output , ndt_pose_);
         ndt_pose_ = ndt_.getFinalTransformation();
         optimize();
+
+        return true;
     }
 
     bool Process::optimize()

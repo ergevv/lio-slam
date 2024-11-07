@@ -4,7 +4,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <string>
 #include "process.h"
-
+#include "utility.h"
 
 int main(int argc, char ** argv)
 {

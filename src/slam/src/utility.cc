@@ -19,8 +19,6 @@ namespace slam_czc
         return cloud;
     }
 
-
-
     Eigen::Matrix4f State::getTransform()
     {
         // 创建一个4x4的单位矩阵
@@ -36,19 +34,7 @@ namespace slam_czc
         return transform.cast<float>();
     }
 
-        template <typename S>
-    inline Eigen::Matrix<S, 3, 1> vecFromArray(const std::vector<S> &v)
-    {
-        return Eigen::Matrix<S, 3, 1>(v[0], v[1], v[2]);
-    }
-    
-    template <typename S>
-    inline Eigen::Matrix<S, 3, 3> matFromArray(const std::vector<S> &v)
-    {
-        Eigen::Matrix<S, 3, 3> m;
-        m << v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8];
-        return m;
-    }
+
 
     template <typename Derived>
     static Eigen::Quaternion<typename Derived::Scalar> theta2Q(const Eigen::MatrixBase<Derived> &theta)

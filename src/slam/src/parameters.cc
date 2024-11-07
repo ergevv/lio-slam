@@ -26,15 +26,15 @@ bool readParameters(ros::NodeHandle &n)
 {
     std::string config_file;
     config_file = readRosParam<std::string>(n, "config_file");
-    auto yaml = YAML::LoadFile(yaml_file);
+    auto yaml = YAML::LoadFile(config_file);
     std::vector<double> ext_t = yaml["mapping"]["extrinsic_T"].as<std::vector<double>>();
     std::vector<double> ext_r = yaml["mapping"]["extrinsic_R"].as<std::vector<double>>();
-    ACC_N = fsSettings["acc_n"];
-    ACC_W = fsSettings["acc_w"];
-    GYR_N = fsSettings["gyr_n"];
-    GYR_W = fsSettings["gyr_w"];
-    G.z() = fsSettings["g_norm"];
-    TIC = vecFromArray(ext_t);
-    RIC = matFromArray(ext_r);
+    ACC_N = yaml["acc_n"].as<double>();
+    ACC_W = yaml["acc_w"].as<double>();
+    GYR_N = yaml["gyr_n"].as<double>();
+    GYR_W = yaml["gyr_w"].as<double>();
+    G.z() = yaml["g_norm"].as<double>();
+    TIC = slam_czc::vecFromArray(ext_t);
+    RIC = slam_czc::matFromArray(ext_r);
     return true;
 }

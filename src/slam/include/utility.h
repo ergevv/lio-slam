@@ -10,6 +10,21 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Imu.h>
 #include <string>
+#include "pcl/impl/pcl_base.hpp"
+#include "pcl/kdtree/impl/kdtree_flann.hpp" 
+#include "pcl/search/impl/organized.hpp"
+#include "pcl/surface/impl/convex_hull.hpp"
+//#include <pcl/filters.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/voxel_grid_covariance.h>
+#include <pcl/search/kdtree.h>
+
+
+
+// Ceres 头文件
+#include <ceres/ceres.h>
+
+
 
 namespace slam_czc
 {
@@ -107,10 +122,18 @@ namespace slam_czc
     };
 
     template <typename S>
-    inline Eigen::Matrix<S, 3, 1> vecFromArray(const std::vector<S> &v);
+    inline Eigen::Matrix<S, 3, 1> vecFromArray(const std::vector<S> &v)
+    {
+        return Eigen::Matrix<S, 3, 1>(v[0], v[1], v[2]);
+    }
 
     template <typename S>
-    inline Eigen::Matrix<S, 3, 3> matFromArray(const std::vector<S> &v);
+    inline Eigen::Matrix<S, 3, 3> matFromArray(const std::vector<S> &v)
+    {
+        Eigen::Matrix<S, 3, 3> m;
+        m << v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8];
+        return m;
+    }
 
     template <typename Derived>
     static Eigen::Quaternion<typename Derived::Scalar> theta2Q(const Eigen::MatrixBase<Derived> &theta);
