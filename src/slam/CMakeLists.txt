@@ -11,15 +11,20 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  pcl_ros
+  pcl_conversions
 )
 find_package(YAML-CPP REQUIRED)
 find_package(Eigen3 REQUIRED)
+
+set(PCL_DIR "/home/erge/cpp/package/pcl-1.14-install/share/pcl-1.14") 
 find_package(PCL REQUIRED)
+
 set(Ceres_DIR "/home/erge/cpp/package/ceres-1.14.0-install/lib/cmake/Ceres") 
 find_package(Ceres REQUIRED)
 
-set(g2o_DIR "/home/erge/cpp/package/g2o-install/lib/cmake/g2o") 
-find_package(g2o REQUIRED)
+# set(g2o_DIR "/home/erge/cpp/package/g2o-install/lib/cmake/g2o") 
+# find_package(g2o REQUIRED)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -218,16 +223,7 @@ include_directories(
 # catkin_add_nosetests(test)
 
 
-add_executable(run_slam src/run.cc)
-target_include_directories(
-  run_slam PRIVATE
-  include
-  ${catkin_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIR}
-	${PCL_INCLUDE_DIRS}  
-  ${CERES_INCLUDE_DIRS}
-  ${G2O_INCLUDE_DIRS}
-  )
+
 
 add_library(
   lib_slam SHARED
@@ -244,26 +240,41 @@ target_include_directories(
   ${EIGEN3_INCLUDE_DIR}
 	${PCL_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS}
-  ${G2O_INCLUDE_DIRS}  
+  # ${G2O_INCLUDE_DIRS}  
   ${YAML_CPP_INCLUDE_DIR}
   )
+
+
+
 
 target_link_libraries(
   lib_slam
   ${catkin_LIBRARIES} 
   ${PCL_LIBRARIES}
   ${CERES_LIBRARIES}
-  ${G2O_LIBRARIES}
+  # ${G2O_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
+  )
+
+
+add_executable(run_slam src/run.cc)
+target_include_directories(
+  run_slam PRIVATE
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+  ${PCL_INCLUDE_DIRS}  
+  ${CERES_INCLUDE_DIRS}
+  # ${G2O_INCLUDE_DIRS}
   )
 
 target_link_libraries(
   run_slam
+  lib_slam
   ${catkin_LIBRARIES} 
   ${PCL_LIBRARIES}
   ${CERES_LIBRARIES}
-  ${G2O_LIBRARIES}
-  lib_slam
+  # ${G2O_LIBRARIES}
   )
 
 

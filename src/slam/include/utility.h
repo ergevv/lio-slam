@@ -1,6 +1,12 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
+
+
+#define PCL_NO_PRECOMPILE
+
+#include <pcl/filters/passthrough.h>
+#include <pcl/filters/impl/passthrough.hpp>
 #include <ros/ros.h>
 #include <Eigen/Dense>
 #include <pcl/point_cloud.h>                 // pcl::PointCloud
@@ -18,8 +24,8 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/voxel_grid_covariance.h>
 #include <pcl/search/kdtree.h>
-
-
+#include <pcl/io/pcd_io.h>
+#include <pcl/search/impl/search.hpp>
 
 // Ceres 头文件
 #include <ceres/ceres.h>
@@ -136,7 +142,7 @@ namespace slam_czc
     }
 
     template <typename Derived>
-    static Eigen::Quaternion<typename Derived::Scalar> theta2Q(const Eigen::MatrixBase<Derived> &theta);
+    Eigen::Quaternion<typename Derived::Scalar> theta2Q(const Eigen::MatrixBase<Derived> &theta);
 }
 
 #endif

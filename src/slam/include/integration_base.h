@@ -148,6 +148,20 @@ public:
         return state;
     }
 
+    template <typename Derived>
+    Eigen::Quaternion<typename Derived::Scalar> theta2Q(const Eigen::MatrixBase<Derived> &theta) const
+    {
+        typedef typename Derived::Scalar Scalar_t;
+
+        Eigen::Quaternion<Scalar_t> dq;
+        Eigen::Matrix<Scalar_t, 3, 1> half_theta = theta;
+        half_theta /= static_cast<Scalar_t>(2.0);
+        dq.w() = static_cast<Scalar_t>(1.0);
+        dq.x() = half_theta.x();
+        dq.y() = half_theta.y();
+        dq.z() = half_theta.z();
+        return dq;
+    }
 
     // 修改 getDeltaRotation 方法签名以支持 Eigen::MatrixBase
     template <typename Derived>
@@ -156,7 +170,7 @@ public:
         using ScalarType = typename Derived::Scalar;
         Eigen::Matrix<ScalarType, 3, 3> dq_dbg = jacobian.block<3, 3>(3, 12).cast<ScalarType>();
         Eigen::Matrix<ScalarType, 3, 1> tem = dq_dbg * (bg - linearized_bg.cast<ScalarType>());
-        return delta_q.cast<ScalarType>() * slam_czc::theta2Q(tem);
+        return delta_q.cast<ScalarType>() * theta2Q<Eigen::Matrix<ScalarType, 3, 1> >(tem);
     }
 
     // 修改 getDeltaVelocity 方法签名以支持 Eigen::MatrixBase
