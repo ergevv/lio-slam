@@ -1,10 +1,14 @@
 catkin_make -DCATKIN_WHITELIST_PACKAGES="slam"
 source ./devel/setup.bash
+
 roslaunch scout_gazebo scout_gazebo.launch
+roslaunch slam test.launch
 rostopic list
 rostopic echo 
 rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 
+
+rosbag play /home/erge/桌面/开源工程/ros_ws/src/slam/bag/pc_imu.bag
 
 问题1：为什么libgazebo_ros_velodyne_laser.so无法直接生成，要单独拎出来
 
@@ -87,4 +91,4 @@ TCP 协议有一个 Nagle 算法，默认情况下，当发送小数据包时，
 ceres中，自动求导类型是ceres::Jet，手动求导是double
 
 
-为什么调用utility的theta2Q函数会失败，注册点云需要定义宏PCL_NO_PRECOMPILE
+为什么调用utility的theta2Q函数会失败，是不是因为头文件，注册点云需要定义宏PCL_NO_PRECOMPILE

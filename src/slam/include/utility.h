@@ -1,8 +1,6 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
-
-
 #define PCL_NO_PRECOMPILE
 
 #include <pcl/filters/passthrough.h>
@@ -17,10 +15,10 @@
 #include <sensor_msgs/Imu.h>
 #include <string>
 #include "pcl/impl/pcl_base.hpp"
-#include "pcl/kdtree/impl/kdtree_flann.hpp" 
+#include "pcl/kdtree/impl/kdtree_flann.hpp"
 #include "pcl/search/impl/organized.hpp"
 #include "pcl/surface/impl/convex_hull.hpp"
-//#include <pcl/filters.h>
+// #include <pcl/filters.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/voxel_grid_covariance.h>
 #include <pcl/search/kdtree.h>
@@ -29,8 +27,6 @@
 
 // Ceres 头文件
 #include <ceres/ceres.h>
-
-
 
 namespace slam_czc
 {
@@ -97,9 +93,6 @@ namespace slam_czc
               (len - 1);
     }
 
-
-
-
     class State
     {
     public:
@@ -143,6 +136,10 @@ namespace slam_czc
 
     template <typename Derived>
     Eigen::Quaternion<typename Derived::Scalar> theta2Q(const Eigen::MatrixBase<Derived> &theta);
+
+    Eigen::SparseMatrix<double> CRSMatrix2EigenMatrix(const ceres::CRSMatrix *crs);
+
+    bool marginalize(const Eigen::MatrixXd &H, const Eigen::VectorXd &b, Eigen::MatrixXd &Jr, Eigen::VectorXd &br, const int m);
 }
 
 #endif

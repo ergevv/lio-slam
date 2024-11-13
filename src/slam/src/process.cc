@@ -45,6 +45,7 @@ namespace slam_czc
         if (!imu_init_flag) // imu初始化
         {
             initIMU();
+            last_key_state_.p_.x() = -p_thresh_ - 0.1; //确保第一帧点云是关键帧
             return true; // 初始化成功之前的数据舍弃
         }
 
@@ -87,11 +88,14 @@ namespace slam_czc
         // 预测当前位姿
         current_state_ = imu_pre_->predict(last_state_, imu_init_.gravity_);
 
-        PointType::Ptr output (new PointType);
+        PointType::Ptr output(new PointType);
         ndt_pose_ = current_state_.getTransform();
-        ndt_.align(*output , ndt_pose_);
+        ndt_.align(*output, ndt_pose_);
         ndt_pose_ = ndt_.getFinalTransformation();
         optimize();
+
+
+        //关键帧判断，添加点云
 
         return true;
     }
@@ -113,11 +117,17 @@ namespace slam_czc
         // 优化变量转成数组
         vecter2double();
 
-        problem.AddParameterBlock(current_q_, 4, q_parameterization);
+        problem.AddParameterBlock(last_p_, 3);
         problem.AddParameterBlock(last_q_, 4, q_parameterization);
-
+        problem.AddParameterBlock(last_v_, 3);
         problem.AddParameterBlock(last_bg_, 3);
         problem.AddParameterBlock(last_ba_, 3);
+        problem.AddParameterBlock(current_p_, 3);
+        problem.AddParameterBlock(current_q_, 4, q_parameterization);
+        problem.AddParameterBlock(current_v_, 3);
+        problem.AddParameterBlock(current_bg_, 3);
+        problem.AddParameterBlock(current_ba_, 3);
+
         // 如果不需要优化外参就设置为fix
         problem.SetParameterBlockConstant(last_bg_);
         problem.SetParameterBlockConstant(last_ba_);
@@ -126,9 +136,18 @@ namespace slam_czc
             imu_pre_, imu_init_.gravity_);
         problem.AddResidualBlock(imu_factor, loss_function, last_q_, last_p_, last_v_, last_bg_, last_ba_, current_q_, current_p_, current_v_, current_bg_, current_ba_);
 
-        ceres::CostFunction *marg_factor = MargFactor::Create(
-            last_state_, prior_info_);
-        problem.AddResidualBlock(marg_factor, loss_function, last_q_, last_p_, last_v_, last_bg_, last_ba_);
+        if (marg_success_)
+        {
+            ceres::CostFunction *marg_factor = MargFactor::Create(
+                last_state_, Jr_, br_, marg_weight_);
+            problem.AddResidualBlock(marg_factor, loss_function, last_q_, last_p_, last_v_, last_bg_, last_ba_);
+        }
+        else
+        {
+            problem.SetParameterBlockConstant(last_p_);
+            problem.SetParameterBlockConstant(last_q_);
+            problem.SetParameterBlockConstant(last_v_);
+        }
 
         // 残差：imu得到的位资、lidar的位资
         Eigen::Matrix<double, 6, 6> ndt_info_ = Eigen::Matrix<double, 6, 6>::Identity(); // 后续需要优化
@@ -166,6 +185,25 @@ namespace slam_czc
         updatePath(last_state_);
         pub_path_.publish(global_path_);
 
+        // 边缘化
+        ceres::Problem::EvaluateOptions eval_options;
+        ceres::CRSMatrix jacobian_crs_matrix;
+        eval_options.residuals = true; // 请求计算残差
+        Eigen::VectorXd residuals;
+
+        problem.Evaluate(eval_options, nullptr, &residuals, nullptr, &jacobian_crs_matrix);
+
+        // 转换为Eigen稀疏矩阵并打印相关信息
+
+        Eigen::SparseMatrix<double> J = CRSMatrix2EigenMatrix(&jacobian_crs_matrix);
+
+        // 计算海森矩阵
+        Eigen::VectorXd b = -J.transpose() * residuals;
+        Eigen::MatrixXd H = J.transpose() * J;
+
+        // 通过海森矩阵求取雅可比矩阵和残差
+        marginalize(H, b, Jr, br, 15);
+        marg_success_ = true;
         return true;
     }
 
@@ -258,6 +296,7 @@ namespace slam_czc
 
     Process::Process(std::string imu_topic, std::string pc_topic)
     {
+        nh = ros::NodeHandle("~");
         sub_imu = nh.subscribe<sensor_msgs::Imu>(imu_topic, 2000, &Process::processIMU, this, ros::TransportHints().tcpNoDelay()); // 频率100
 
         sub_point_cloud = nh.subscribe<sensor_msgs::PointCloud2>(pc_topic, 10, &Process::processPointCloud, this, ros::TransportHints().tcpNoDelay()); // 频率10
@@ -281,7 +320,7 @@ namespace slam_czc
         ndt_.setMaximumIterations(35);       // 最大迭代次数
         ndt_.setTransformationEpsilon(0.01); // 收敛阈值
         ndt_.setStepSize(0.1);               // 梯度下降步长
-        //ndt_.setNumThreads(4);               // 使用多线程加速
+        // ndt_.setNumThreads(4);               // 使用多线程加速
     }
 
 }

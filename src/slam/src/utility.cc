@@ -34,8 +34,6 @@ namespace slam_czc
         return transform.cast<float>();
     }
 
-
-
     template <typename Derived>
     Eigen::Quaternion<typename Derived::Scalar> theta2Q(const Eigen::MatrixBase<Derived> &theta)
     {
@@ -49,6 +47,55 @@ namespace slam_czc
         dq.y() = half_theta.y();
         dq.z() = half_theta.z();
         return dq;
+    }
+
+    // 辅助函数：将CRSMatrix转换为Eigen SparseMatrix
+    Eigen::SparseMatrix<double> CRSMatrix2EigenMatrix(const ceres::CRSMatrix *crs)
+    {
+        Eigen::SparseMatrix<double> sparseMat(crs->num_rows, crs->num_cols);
+        for (int i = 0; i < crs->num_rows; ++i)
+        {
+            for (int j = crs->rows[i]; j < crs->rows[i + 1]; ++j)
+            {
+                sparseMat.insert(i, crs->cols[j]) = crs->values[j];
+            }
+        }
+        return sparseMat;
+    }
+
+    bool marginalize(const Eigen::MatrixXd &H, const Eigen::VectorXd &b, Eigen::MatrixXd &Jr, Eigen::VectorXd &br, const int m)
+    {
+        //$$(H_{22} - H_{12}^TH_{11}^{-1}H_{12})\delta x_2 = b_2 - H_{12}^TH_{11}^{-1}b_1$$
+
+        // Amm矩阵的构建是为了保证其正定性
+        Eigen::MatrixXd Amm = 0.5 * (H.block(0, 0, m, m) + H.block(0, 0, m, m).transpose());
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> saes(Amm); // 特征值分解
+
+        // ROS_ASSERT_MSG(saes.eigenvalues().minCoeff() >= -1e-4, "min eigenvalue %f", saes.eigenvalues().minCoeff());
+        //  一个逆矩阵的特征值是原矩阵的倒数，特征向量相同　select类似c++中 ? :运算符
+        //  利用特征值取逆来构造其逆矩阵
+        Eigen::MatrixXd Amm_inv = saes.eigenvectors() * Eigen::VectorXd((saes.eigenvalues().array() > eps).select(saes.eigenvalues().array().inverse(), 0)).asDiagonal() * saes.eigenvectors().transpose();
+
+        Eigen::VectorXd bmm = b.segment(0, m);     // 带边缘化的大小
+        Eigen::MatrixXd Amr = H.block(0, m, m, m); // 对应的四块矩阵
+        Eigen::MatrixXd Arm = H.block(m, 0, m, m);
+        Eigen::MatrixXd Arr = H.block(m, m, m, m);
+        Eigen::VectorXd brr = b.segment(m, m); // 剩下的参数
+        Eigen::MatrixXd H2 = Arr - Arm * Amm_inv * Amr;
+        Eigen::VectorXd b2 = brr - Arm * Amm_inv * bmm;
+
+        // 通过海森矩阵、b 求解雅可比矩阵和残差
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> saes2(H2);
+        // 特征值取逆
+        Eigen::VectorXd S = Eigen::VectorXd((saes2.eigenvalues().array() > eps).select(saes2.eigenvalues().array(), 0));
+        Eigen::VectorXd S_inv = Eigen::VectorXd((saes2.eigenvalues().array() > eps).select(saes2.eigenvalues().array().inverse(), 0));
+
+        Eigen::VectorXd S_sqrt = S.cwiseSqrt();
+        Eigen::VectorXd S_inv_sqrt = S_inv.cwiseSqrt();
+        Jr = S_sqrt.asDiagonal() * saes2.eigenvectors().transpose();
+
+        br = -S_inv_sqrt.asDiagonal() * saes2.eigenvectors().transpose() * b2;
+        return true;
     }
 
 }

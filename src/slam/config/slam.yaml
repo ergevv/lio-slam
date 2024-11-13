@@ -22,3 +22,9 @@ g_norm: 9.81007     # gravity magnitude
 #optimization parameters
 max_solver_time: 0.04  # max solver itration time (ms), to guarantee real time
 max_num_iterations: 8   # max solver itrations, to guarantee real time
+
+weight: 1.0
+
+key_pose_thresh:
+  p_thresh: 0.3
+  q_thresh: 5.0
