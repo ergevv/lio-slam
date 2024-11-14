@@ -85,6 +85,7 @@ namespace slam_czc
         Eigen::Quaterniond QIL_ = Eigen::Quaterniond::Identity();
         pcl::NormalDistributionsTransform<Point, Point> ndt_; // 模板得是点的类型`
         Eigen::Matrix4f ndt_pose_;
+        PointType::Ptr pc_key_;
         Eigen::Matrix<double, 15, 15> prior_info_ = Eigen::Matrix<double, 15, 15>::Identity();
         double current_p_[3];
         double current_q_[4];
@@ -102,8 +103,8 @@ namespace slam_czc
         double acc_n_, acc_w_;
         double gyr_n_, gyr_w_;
 
-        Eigen::MatrixXd Jr;
-        Eigen::VectorXd br;
+        Eigen::MatrixXd Jr_;
+        Eigen::VectorXd Er_;
         bool marg_success_ = false;
         double marg_weight_ = 1.0;
         double p_thresh_ = 0.3;

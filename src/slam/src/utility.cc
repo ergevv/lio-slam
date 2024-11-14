@@ -49,6 +49,32 @@ namespace slam_czc
         return dq;
     }
 
+    Eigen::Vector3d Q2theta(const Eigen::Quaterniond &q)
+    {
+        double w = q.w();
+        double x = q.x();
+        double y = q.y();
+        double z = q.z();
+
+        // 计算旋转角
+        double theta = 2 * std::acos(w);
+
+        // 防止除以零的情况
+        if (theta < 1e-6)
+        {
+            return Eigen::Vector3d::Zero(); // 当接近零旋转时，返回零向量
+        }
+
+        // 计算旋转轴
+        double s = std::sqrt(1 - w * w); // |q| 应该等于 1，即 w^2 + x^2 + y^2 + z^2 = 1
+        double u_x = x / s;
+        double u_y = y / s;
+        double u_z = z / s;
+
+        // 计算李代数 so(3) 向量
+        return theta * Eigen::Vector3d(u_x, u_y, u_z);
+    }
+
     // 辅助函数：将CRSMatrix转换为Eigen SparseMatrix
     Eigen::SparseMatrix<double> CRSMatrix2EigenMatrix(const ceres::CRSMatrix *crs)
     {
@@ -63,7 +89,7 @@ namespace slam_czc
         return sparseMat;
     }
 
-    bool marginalize(const Eigen::MatrixXd &H, const Eigen::VectorXd &b, Eigen::MatrixXd &Jr, Eigen::VectorXd &br, const int m)
+    bool marginalize(const Eigen::MatrixXd &H, const Eigen::VectorXd &b, Eigen::MatrixXd &Jr, Eigen::VectorXd &Er, const int m)
     {
         //$$(H_{22} - H_{12}^TH_{11}^{-1}H_{12})\delta x_2 = b_2 - H_{12}^TH_{11}^{-1}b_1$$
 
@@ -94,7 +120,7 @@ namespace slam_czc
         Eigen::VectorXd S_inv_sqrt = S_inv.cwiseSqrt();
         Jr = S_sqrt.asDiagonal() * saes2.eigenvectors().transpose();
 
-        br = -S_inv_sqrt.asDiagonal() * saes2.eigenvectors().transpose() * b2;
+        Er =  S_inv_sqrt.asDiagonal() * saes2.eigenvectors().transpose() * (-b2);
         return true;
     }
 

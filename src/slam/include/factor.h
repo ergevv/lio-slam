@@ -134,19 +134,12 @@ namespace slam_czc
     // problem.AddParameterBlock(last_v_, 3);
     // problem.AddParameterBlock(last_bg_, 3);
     // problem.AddParameterBlock(last_ba_, 3);
-    class MarginalizationFactor : public ceres::CostFunction
-    {
-    public:
-        MarginalizationFactor(MarginalizationInfo *_marginalization_info);
-        virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
 
-        MarginalizationInfo *marginalization_info;
-    };
     class MargFactor : public ceres::CostFunction
     {
     public:
-        MargFactor(const State &state, const Eigen::Matrix<double, 15, 15> &Jr, const Eigen::Matrix<double, 15, 1> &br, double weight)
-            : state_(state), Jr_(Jr), br_(br), weight_(weight)
+        MargFactor(const State &state, const Eigen::Matrix<double, 15, 15> &Jr, const Eigen::Matrix<double, 15, 1> &Er, double weight)
+            : state_(state), Jr_(Jr), Er_(Er), weight_(weight)
         {
         }
         /**
@@ -182,7 +175,7 @@ namespace slam_czc
             dx.segment(12, 3) = delta_ba - state_.ba_;
 
             Eigen::Map<Eigen::Matrix<double, 15, 1>> residual(residuals);
-            residual = -Jr_ * dx + br_;
+            residual = Jr_ * dx + Er_;
 
             if (jacobians)
             {
@@ -190,71 +183,69 @@ namespace slam_czc
                 for (int i = 0; i < 5; ++i)
                 {
                     Eigen::Map<Eigen::Matrix<double, 15, 3>> Ji(jacobians[i]);
-                    Ji = Jr.block<15, 3>(0, i * 3);
+                    Ji = Jr_.block<15, 3>(0, i * 3);
                 }
             }
 
             return true;
         }
-    }
 
-    State state_;
-    Eigen::Matrix<double, 15, 15> Jr_;
-    Eigen::Matrix<double, 15, 1> br_;
-    double weight_ = 1.0;
+        State state_;
+        Eigen::Matrix<double, 15, 15> Jr_;
+        Eigen::Matrix<double, 15, 1> Er_;
+        double weight_ = 1.0;
+    };
+
+    struct PointCloudFactor
+    {
+        PointCloudFactor(const Eigen::Matrix4d &pc_pose, const Eigen::Matrix<double, 6, 6> &ndt_info)
+        {
+            ndt_info_ = Eigen::LLT<Eigen::Matrix<double, 6, 6>>(ndt_info.inverse()).matrixL().transpose();
+            // 提取平移部分
+            ndt_p_ = pc_pose.block<3, 1>(0, 3);
+
+            // 提取旋转部分为旋转矩阵
+            Eigen::Matrix3d rotation_matrix = pc_pose.block<3, 3>(0, 0);
+
+            // 将旋转矩阵转换为四元数
+            ndt_q_ = Eigen::Quaterniond(rotation_matrix);
+        }
+
+        template <typename T>
+        bool operator()(const T *q, const T *p, T *residuals) const
+        {
+            Eigen::Map<const Eigen::Quaternion<T>> q_current(q);
+            Eigen::Map<const Eigen::Matrix<T, 3, 1>> p_current(p);
+            Eigen::Map<Eigen::Matrix<T, 6, 1>> residual(residuals);
+
+            // 计算旋转误差
+            Eigen::Matrix<T, 3, 3> eR = ndt_q_.inverse().toRotationMatrix().cast<T>() * q_current.toRotationMatrix();
+            Eigen::AngleAxis<T> aa(eR);
+            Eigen::Matrix<T, 3, 1> er = aa.angle() * aa.axis();
+
+            // 设置残差的前3个元素
+            residual.head(3) = er;
+
+            // 计算位置误差
+            residual.template block<3, 1>(3, 0) = p_current - ndt_p_.cast<T>();
+
+            // 应用信息矩阵
+            residual = ndt_info_.cast<T>() * residual;
+
+            return true;
+        }
+
+        static ceres::CostFunction *Create(const Eigen::Matrix4d &pc_pose, Eigen::Matrix<double, 6, 6> ndt_info)
+        {
+            return (new ceres::AutoDiffCostFunction<
+                    PointCloudFactor, 6, 4, 3>(new PointCloudFactor(pc_pose, ndt_info)));
+        }
+
+        // Eigen::Matrix4f pc_pose_;
+        Eigen::Matrix<double, 6, 6> ndt_info_;
+        Eigen::Quaterniond ndt_q_;
+        Eigen::Vector3d ndt_p_;
+    };
 };
-
-struct PointCloudFactor
-{
-    PointCloudFactor(const Eigen::Matrix4d &pc_pose, const Eigen::Matrix<double, 6, 6> &ndt_info)
-    {
-        ndt_info_ = Eigen::LLT<Eigen::Matrix<double, 6, 6>>(ndt_info.inverse()).matrixL().transpose();
-        // 提取平移部分
-        ndt_p_ = pc_pose.block<3, 1>(0, 3);
-
-        // 提取旋转部分为旋转矩阵
-        Eigen::Matrix3d rotation_matrix = pc_pose.block<3, 3>(0, 0);
-
-        // 将旋转矩阵转换为四元数
-        ndt_q_ = Eigen::Quaterniond(rotation_matrix);
-    }
-
-    template <typename T>
-    bool operator()(const T *q, const T *p, T *residuals) const
-    {
-        Eigen::Map<const Eigen::Quaternion<T>> q_current(q);
-        Eigen::Map<const Eigen::Matrix<T, 3, 1>> p_current(p);
-        Eigen::Map<Eigen::Matrix<T, 6, 1>> residual(residuals);
-
-        // 计算旋转误差
-        Eigen::Matrix<T, 3, 3> eR = ndt_q_.inverse().toRotationMatrix().cast<T>() * q_current.toRotationMatrix();
-        Eigen::AngleAxis<T> aa(eR);
-        Eigen::Matrix<T, 3, 1> er = aa.angle() * aa.axis();
-
-        // 设置残差的前3个元素
-        residual.head(3) = er;
-
-        // 计算位置误差
-        residual.template block<3, 1>(3, 0) = p_current - ndt_p_.cast<T>();
-
-        // 应用信息矩阵
-        residual = ndt_info_.cast<T>() * residual;
-
-        return true;
-    }
-
-    static ceres::CostFunction *Create(const Eigen::Matrix4d &pc_pose, Eigen::Matrix<double, 6, 6> ndt_info)
-    {
-        return (new ceres::AutoDiffCostFunction<
-                PointCloudFactor, 6, 4, 3>(new PointCloudFactor(pc_pose, ndt_info)));
-    }
-
-    // Eigen::Matrix4f pc_pose_;
-    Eigen::Matrix<double, 6, 6> ndt_info_;
-    Eigen::Quaterniond ndt_q_;
-    Eigen::Vector3d ndt_p_;
-};
-}
-;
 
 #endif

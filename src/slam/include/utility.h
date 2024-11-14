@@ -7,6 +7,8 @@
 #include <pcl/filters/impl/passthrough.hpp>
 #include <ros/ros.h>
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
+#include <Eigen/SparseCore>
 #include <pcl/point_cloud.h>                 // pcl::PointCloud
 #include <pcl/point_types.h>                 // pcl::PointXYZ
 #include <pcl_conversions/pcl_conversions.h> // pcl::fromROSMsg
@@ -133,9 +135,11 @@ namespace slam_czc
         m << v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8];
         return m;
     }
-
+    const double eps = 1e-8;
     template <typename Derived>
     Eigen::Quaternion<typename Derived::Scalar> theta2Q(const Eigen::MatrixBase<Derived> &theta);
+
+    Eigen::Vector3d Q2theta(const Eigen::Quaterniond &q);
 
     Eigen::SparseMatrix<double> CRSMatrix2EigenMatrix(const ceres::CRSMatrix *crs);
 

@@ -74,10 +74,12 @@ namespace slam_czc
 
         if (pc_first_flag_)
         {
-            ndt_.setInputTarget(pc_trans_filter);
+            *pc_key_ += *pc_trans_filter;
+            ndt_.setInputTarget(pc_key_);
             imu_pre_ = std::make_shared<IntegrationBase>(last_imu_->acce_, last_imu_->gyro_, imu_init_.init_ba_, imu_init_.init_bg_, imu_init_.cov_acce_n_, imu_init_.cov_gyro_n_, imu_init_.cov_acce_w_, imu_init_.cov_gyro_w_);
             pc_first_flag_ = false;
 
+            
             // 发送一次位姿到rviz
             updatePath(last_state_);
             return true;
@@ -96,6 +98,16 @@ namespace slam_czc
 
 
         //关键帧判断，添加点云
+        Eigen::Vector3d delta_p = current_state_.p_ - last_key_state_.p_;
+        Eigen::Vector3d delta_theta = Q2theta(last_key_state_.q_.inverse()*current_state_.q_);
+
+        if (delta_p.norm() > p_thresh_ || delta_theta.norm() > q_thresh_ * 3.14/180.0)
+        {
+            ndt_pose_ = current_state_.getTransform();
+            pcl::transformPointCloud(*pc_trans_filter, *output, ndt_pose_);
+            *pc_key_ += *output;
+            ndt_.setInputTarget(pc_key_);
+        }
 
         return true;
     }
@@ -138,8 +150,8 @@ namespace slam_czc
 
         if (marg_success_)
         {
-            ceres::CostFunction *marg_factor = MargFactor::Create(
-                last_state_, Jr_, br_, marg_weight_);
+            auto *marg_factor = new MargFactor(
+                last_state_, Jr_, Er_, marg_weight_);
             problem.AddResidualBlock(marg_factor, loss_function, last_q_, last_p_, last_v_, last_bg_, last_ba_);
         }
         else
@@ -188,11 +200,13 @@ namespace slam_czc
         // 边缘化
         ceres::Problem::EvaluateOptions eval_options;
         ceres::CRSMatrix jacobian_crs_matrix;
-        eval_options.residuals = true; // 请求计算残差
-        Eigen::VectorXd residuals;
+        //eval_options.residuals = true; // 请求计算残差
+        std::vector<double> residuals_std;
+        
 
-        problem.Evaluate(eval_options, nullptr, &residuals, nullptr, &jacobian_crs_matrix);
+        problem.Evaluate(eval_options, nullptr, &residuals_std, nullptr, &jacobian_crs_matrix);
 
+        Eigen::VectorXd residuals = Eigen::Map<Eigen::VectorXd>(residuals_std.data(), residuals_std.size());
         // 转换为Eigen稀疏矩阵并打印相关信息
 
         Eigen::SparseMatrix<double> J = CRSMatrix2EigenMatrix(&jacobian_crs_matrix);
@@ -202,7 +216,7 @@ namespace slam_czc
         Eigen::MatrixXd H = J.transpose() * J;
 
         // 通过海森矩阵求取雅可比矩阵和残差
-        marginalize(H, b, Jr, br, 15);
+        marginalize(H, b, Jr_, Er_, 15);
         marg_success_ = true;
         return true;
     }
@@ -294,7 +308,8 @@ namespace slam_czc
         return true;
     }
 
-    Process::Process(std::string imu_topic, std::string pc_topic)
+    Process::Process(std::string imu_topic, std::string pc_topic):
+     pc_key_(new PointType)
     {
         nh = ros::NodeHandle("~");
         sub_imu = nh.subscribe<sensor_msgs::Imu>(imu_topic, 2000, &Process::processIMU, this, ros::TransportHints().tcpNoDelay()); // 频率100
@@ -321,6 +336,8 @@ namespace slam_czc
         ndt_.setTransformationEpsilon(0.01); // 收敛阈值
         ndt_.setStepSize(0.1);               // 梯度下降步长
         // ndt_.setNumThreads(4);               // 使用多线程加速
+
+       
     }
 
 }
