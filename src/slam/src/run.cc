@@ -8,6 +8,7 @@
 
 int main(int argc, char ** argv)
 {
+    setlocale(LC_ALL,"");
     ros::init(argc,argv,"slam");
     // ros::NodeHandle n("~");
     

@@ -13,7 +13,7 @@ namespace slam_czc
             Options() {}
             double init_need_time_ = 10;
             int init_imu_max_size_ = 2000;
-            int init_imu_min_size_ = 2000;
+            int init_imu_min_size_ = 100;
             double max_gyro_var_ = 0.5;
             double max_acce_var_ = 0.05;
             double gravity_norm_ = 9.81;

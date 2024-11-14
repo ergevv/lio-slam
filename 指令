@@ -1,14 +1,17 @@
 catkin_make -DCATKIN_WHITELIST_PACKAGES="slam"
+catkin_make -DCATKIN_WHITELIST_PACKAGES="velodyne_gazebo_plugins"
+
 source ./devel/setup.bash
 
 roslaunch scout_gazebo scout_gazebo.launch
 roslaunch slam test.launch
 rostopic list
-rostopic echo 
+rostopic echo /imu/data
+rostopic echo /velodyne_points
 rosrun teleop_twist_keyboard teleop_twist_keyboard.py
+rosbag record -O pc_imu  /velodyne_points  /imu/data
 
-
-rosbag play /home/erge/桌面/开源工程/ros_ws/src/slam/bag/pc_imu.bag
+rosbag play /home/erge/桌面/开源工程/ros_ws/pc_imu.bag
 
 问题1：为什么libgazebo_ros_velodyne_laser.so无法直接生成，要单独拎出来
 
@@ -42,7 +45,7 @@ IntelliSense 配置:配置默认的c_cpp
 Windows系统下使用Shift + Alt + F，Mac系统下使用Shift + Option + F，Linux系统使用Ctrl + Shift + I
 
 
-$ rosbag record -O pc_imu  /velodyne_points  /imu/data
+$ 
 
 
 模板在头文件声明
@@ -66,7 +69,7 @@ git push -u origin main
 
 git rm --cached <file_path>
 git rm -r --cached <file_path>
-
+git reset --soft HEAD~1 回滚
 
     /*
 nh.subscribe：这是 ros::NodeHandle 的一个方法，用于创建一个订阅者对象。

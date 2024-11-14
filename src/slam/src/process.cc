@@ -152,7 +152,7 @@ namespace slam_czc
         {
             auto *marg_factor = new MargFactor(
                 last_state_, Jr_, Er_, marg_weight_);
-            problem.AddResidualBlock(marg_factor, loss_function, last_q_, last_p_, last_v_, last_bg_, last_ba_);
+            problem.AddResidualBlock(marg_factor, loss_function, last_p_, last_q_, last_v_, last_bg_, last_ba_);
         }
         else
         {
@@ -176,7 +176,7 @@ namespace slam_czc
         // options.minimizer_progress_to_stdout = true;
         // options.use_nonmonotonic_steps = true;
 
-        options.max_solver_time_in_seconds = 0.4;
+        options.max_solver_time_in_seconds = 0.4;  //总体优化时间
 
         ceres::Solver::Summary summary;
         ceres::Solve(options, &problem, &summary); // ceres优化求解
@@ -300,7 +300,7 @@ namespace slam_czc
             last_imu_ = sorted_data_.imu_.back();
             imu_pre_ = std::make_shared<IntegrationBase>(last_imu_->acce_, last_imu_->gyro_, imu_init_.init_ba_, imu_init_.init_bg_, imu_init_.cov_acce_n_, imu_init_.cov_gyro_n_, imu_init_.cov_acce_w_, imu_init_.cov_gyro_w_);
 
-            imu_init_flag = false;
+            imu_init_flag = true;
             current_state_.timestamp_ = sorted_data_.imu_.back()->timestamp_;
             current_state_.g_ = imu_init_.gravity_;
             last_state_ = current_state_;

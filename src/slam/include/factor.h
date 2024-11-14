@@ -33,27 +33,29 @@ namespace slam_czc
             const Eigen::Matrix<T, 3, 1> delta_v = imu_pre_->getDeltaVelocity(bg_current, ba_current);
             const Eigen::Quaternion<T> delta_q = imu_pre_->getDeltaRotation(bg_current);
             const Eigen::Matrix<T, 3, 3> delta_R = delta_q.toRotationMatrix();
+            Eigen::Matrix<T, 3, 3> R_last = q_last.toRotationMatrix().transpose();
+            // 计算位置误差
+            const Eigen::Matrix<T, 3, 1> ep = R_last * (p_current - p_last - v_last * dt_ - (g_ * dt_ * dt_ / 2).cast<T>()) - delta_p;
+            residual.template block<3, 1>(0, 0) = ep;
 
             // 计算旋转误差
-            Eigen::Matrix<T, 3, 3> R_last = q_last.toRotationMatrix().transpose();
+
             Eigen::Matrix<T, 3, 3> eR = delta_R.transpose() * R_last * q_current.toRotationMatrix().transpose();
             Eigen::AngleAxis<T> aa(eR);
             Eigen::Matrix<T, 3, 1> er = aa.angle() * aa.axis();
-            residual.head(3) = er;
+            residual.template block<3, 1>(3, 0) = er;
 
             // 计算速度误差
             const Eigen::Matrix<T, 3, 1> ev = R_last * (v_current - v_last - g_.cast<T>() * dt_) - delta_v;
-            residual.template block<3, 1>(3, 0) = ev;
-
-            // 计算位置误差
-            const Eigen::Matrix<T, 3, 1> ep = R_last * (p_current - p_last - v_last * dt_ - (g_ * dt_ * dt_ / 2).cast<T>()) - delta_p;
-            residual.template block<3, 1>(6, 0) = ep;
-
-            // 计算陀螺仪偏差误差
-            residual.template block<3, 1>(9, 0) = bg_current - bg_last;
+            residual.template block<3, 1>(6, 0) = ev;
 
             // 计算加速度计偏差误差
-            residual.template block<3, 1>(12, 0) = ba_current - ba_last;
+            residual.template block<3, 1>(9, 0) = ba_current - ba_last;
+
+            // 计算陀螺仪偏差误差
+            residual.template block<3, 1>(12, 0) = bg_current - bg_last;
+
+
 
             // 应用信息矩阵
             residual = sqrt_info_.cast<T>() * residual;
@@ -141,13 +143,21 @@ namespace slam_czc
         MargFactor(const State &state, const Eigen::Matrix<double, 15, 15> &Jr, const Eigen::Matrix<double, 15, 1> &Er, double weight)
             : state_(state), Jr_(Jr), Er_(Er), weight_(weight)
         {
+
+            mutable_parameter_block_sizes()->push_back(3); // 调用ceres接口，添加参数块大小信息
+            mutable_parameter_block_sizes()->push_back(4);
+            mutable_parameter_block_sizes()->push_back(3);
+            mutable_parameter_block_sizes()->push_back(3);
+            mutable_parameter_block_sizes()->push_back(3);
+            // printf("residual size: %d, %d\n", cnt, n);
+            set_num_residuals(15); // 残差维数就是所有剩余状态量的维数和，这里时local size
         }
         /**
          * @brief 边缘化结果残差和雅克比的计算
          *
          * @param parameters
          * @param residuals
-         * @param jacobians ：jacobians[i]是第i个参数块的雅克比矩阵，如果第i个参数块是常量，那么jacobians[i]为NULL，大小为residual_block_dim x parameter_block_size[i]
+         * @param jacobians ：jacobians[i]是第i个参数块的雅克比矩阵，如果第i个参数块是常量，那么jacobians[i]为NULL，大小为residual_block_dim x parameter_block_size[i],且是行优先
          * @return true
          * @return false
          */
@@ -182,8 +192,12 @@ namespace slam_czc
 
                 for (int i = 0; i < 5; ++i)
                 {
-                    Eigen::Map<Eigen::Matrix<double, 15, 3>> Ji(jacobians[i]);
-                    Ji = Jr_.block<15, 3>(0, i * 3);
+                    if (jacobians[i])
+                    {
+                        Eigen::Map<Eigen::Matrix<double, 15, 3, Eigen::RowMajor>> Ji(jacobians[i]);
+                        Ji.setZero();
+                        Ji = Jr_.block<15, 3>(0, i * 3);
+                    }
                 }
             }
 

@@ -6,6 +6,7 @@
 class IntegrationBase
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     IntegrationBase() = delete;
     IntegrationBase(const Eigen::Vector3d &_acc_0, const Eigen::Vector3d &_gyr_0,
                     const Eigen::Vector3d &_linearized_ba, const Eigen::Vector3d &_linearized_bg, const Eigen::Vector3d &_cov_acce_n,
@@ -13,7 +14,10 @@ public:
         : acc_0{_acc_0}, gyr_0{_gyr_0}, linearized_acc{_acc_0}, linearized_gyr{_gyr_0},
           linearized_ba{_linearized_ba}, linearized_bg{_linearized_bg},
           jacobian{Eigen::Matrix<double, 15, 15>::Identity()}, covariance{Eigen::Matrix<double, 15, 15>::Zero()},
-          sum_dt{0.0}, delta_p{Eigen::Vector3d::Zero()}, delta_q{Eigen::Quaterniond::Identity()}, delta_v{Eigen::Vector3d::Zero()}
+          sum_dt{0.0}, 
+          delta_p{Eigen::Vector3d::Zero()}, 
+          delta_q{Eigen::Quaterniond::Identity()}, 
+          delta_v{Eigen::Vector3d::Zero()}
 
     {
         noise = Eigen::Matrix<double, 18, 18>::Zero();
@@ -170,7 +174,7 @@ public:
         using ScalarType = typename Derived::Scalar;
         Eigen::Matrix<ScalarType, 3, 3> dq_dbg = jacobian.block<3, 3>(3, 12).cast<ScalarType>();
         Eigen::Matrix<ScalarType, 3, 1> tem = dq_dbg * (bg - linearized_bg.cast<ScalarType>());
-        return delta_q.cast<ScalarType>() * theta2Q<Eigen::Matrix<ScalarType, 3, 1> >(tem);
+        return delta_q.cast<ScalarType>() * theta2Q<Eigen::Matrix<ScalarType, 3, 1>>(tem);
     }
 
     // 修改 getDeltaVelocity 方法签名以支持 Eigen::MatrixBase
