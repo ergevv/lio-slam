@@ -59,7 +59,7 @@ namespace slam_czc
         ros::Subscriber sub_point_cloud;
         ros::Publisher pub_path_;
 
-        std::string odom_frame_id_ = "odom";
+        std::string map_frame_id_ = "map";
 
         nav_msgs::Path global_path_;
 
@@ -99,7 +99,7 @@ namespace slam_czc
         double last_bg_[3];
         double last_ba_[3];
 
-        Eigen::Vector3d g_{0.0, 0.0, 9.8};
+        Eigen::Vector3d g_{0.0, 0.0, -9.8};
         double acc_n_, acc_w_;
         double gyr_n_, gyr_w_;
 

@@ -9,8 +9,10 @@ rostopic list
 rostopic echo /imu/data
 rostopic echo /velodyne_points
 rosrun teleop_twist_keyboard teleop_twist_keyboard.py
+
 rosbag record -O pc_imu  /velodyne_points  /imu/data
 
+rqt_bag /home/erge/桌面/开源工程/ros_ws/pc_imu.bag
 rosbag play /home/erge/桌面/开源工程/ros_ws/pc_imu.bag
 
 问题1：为什么libgazebo_ros_velodyne_laser.so无法直接生成，要单独拎出来

@@ -93,7 +93,37 @@ namespace slam_czc
         ndt_pose_ = current_state_.getTransform();
         ndt_.align(*output, ndt_pose_);
         ndt_pose_ = ndt_.getFinalTransformation();
-        optimize();
+
+        // optimize();
+
+        // 更新imu预积分
+
+        imu_pre_ = std::make_shared<IntegrationBase>(last_imu_->acce_, last_imu_->gyro_, current_state_.ba_, current_state_.bg_, imu_init_.cov_acce_n_, imu_init_.cov_gyro_n_, imu_init_.cov_acce_w_, imu_init_.cov_gyro_w_);
+        last_state_ = current_state_;
+        // 发送位姿到rviz
+        updatePath(last_state_);
+
+        ros::Time time(current_state_.timestamp_);
+        global_path_.header.stamp = time;
+        global_path_.header.frame_id = map_frame_id_;
+        pub_path_.publish(global_path_);
+
+        // 发布map和base_link坐标系
+        static tf::TransformBroadcaster br;
+        tf::Transform send_tf;
+        tf::Quaternion q;
+        // body frame
+
+        send_tf.setOrigin(tf::Vector3(current_state_.p_.x(),
+                                      current_state_.p_.y(),
+                                      current_state_.p_.z()));
+        q.setW(current_state_.q_.w());
+        q.setX(current_state_.q_.x());
+        q.setY(current_state_.q_.y());
+        q.setZ(current_state_.q_.z());
+        send_tf.setRotation(q);
+
+        br.sendTransform(tf::StampedTransform(send_tf, time, map_frame_id_, "base_link"));
 
         // 关键帧判断，添加点云
         Eigen::Vector3d delta_p = current_state_.p_ - last_key_state_.p_;
@@ -105,17 +135,17 @@ namespace slam_czc
             pcl::transformPointCloud(*pc_trans_filter, *output, ndt_pose_);
             *pc_key_ += *output;
             pcl::VoxelGrid<Point> voxel_key; // 注意这里模板应该是点的类型
-            if (num_key_frame_>10)
+            if (num_key_frame_ > 10)
             {
                 leaf_size_ = 2;
             }
-            
+
             voxel_key.setLeafSize(leaf_size_, leaf_size_, leaf_size_);
             voxel_key.setInputCloud(pc_key_);
 
             voxel_key.filter(*pc_key_);
             ndt_.setInputTarget(pc_key_);
-            num_key_frame_ ++;
+            num_key_frame_++;
         }
 
         return true;
@@ -126,7 +156,7 @@ namespace slam_czc
         ceres::Problem problem;
         ceres::LossFunction *loss_function = new ceres::CauchyLoss(1.0);
         // 优化变量定义
-        ceres::LocalParameterization *q_parameterization = new ceres::EigenQuaternionParameterization();  //虚数在前，实部在后
+        ceres::LocalParameterization *q_parameterization = new ceres::EigenQuaternionParameterization(); // 虚数在前，实部在后
         // using BlockSolverType = g2o::BlockSolverX;
         // using LinearSolverType = g2o::LinearSolverEigen<BlockSolverType::PoseMatrixType>;
 
@@ -157,7 +187,7 @@ namespace slam_czc
         {
             auto *marg_factor = new MargFactor(
                 last_state_, Jr_, Er_, marg_weight_);
-            problem.AddResidualBlock(marg_factor, loss_function, last_p_, last_q_, last_v_, last_bg_, last_ba_);
+            // problem.AddResidualBlock(marg_factor, loss_function, last_p_, last_q_, last_v_, last_bg_, last_ba_);
         }
         else
         {
@@ -197,14 +227,6 @@ namespace slam_czc
         current_state_.v_ = Eigen::Map<Eigen::Vector3d>(current_v_);
         current_state_.bg_ = Eigen::Map<Eigen::Vector3d>(current_bg_);
         current_state_.ba_ = Eigen::Map<Eigen::Vector3d>(current_ba_);
-        last_state_ = current_state_;
-
-        // 更新imu预积分
-
-        imu_pre_ = std::make_shared<IntegrationBase>(last_imu_->acce_, last_imu_->gyro_, current_state_.ba_, current_state_.bg_, imu_init_.cov_acce_n_, imu_init_.cov_gyro_n_, imu_init_.cov_acce_w_, imu_init_.cov_gyro_w_);
-        // 发送位姿到rviz
-        updatePath(last_state_);
-        pub_path_.publish(global_path_);
 
         // 边缘化
         ceres::Problem::EvaluateOptions eval_options;
@@ -233,7 +255,7 @@ namespace slam_czc
     {
         geometry_msgs::PoseStamped pose_stamped;
         pose_stamped.header.stamp = ros::Time().fromSec(state.timestamp_);
-        pose_stamped.header.frame_id = odom_frame_id_;
+        pose_stamped.header.frame_id = map_frame_id_;
         pose_stamped.pose.position.x = state.p_.x();
         pose_stamped.pose.position.y = state.p_.y();
         pose_stamped.pose.position.z = state.p_.z();
@@ -252,7 +274,7 @@ namespace slam_czc
         current_q_[1] = current_state_.q_.y();
         current_q_[2] = current_state_.q_.z();
         current_q_[3] = current_state_.q_.w();
-        
+
         current_p_[0] = current_state_.p_.x();
         current_p_[1] = current_state_.p_.y();
         current_p_[2] = current_state_.p_.z();
@@ -271,7 +293,7 @@ namespace slam_czc
         last_q_[1] = last_state_.q_.y();
         last_q_[2] = last_state_.q_.z();
         last_q_[3] = last_state_.q_.w();
-        
+
         last_p_[0] = last_state_.p_.x();
         last_p_[1] = last_state_.p_.y();
         last_p_[2] = last_state_.p_.z();

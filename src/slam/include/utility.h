@@ -30,6 +30,8 @@
 // Ceres 头文件
 #include <ceres/ceres.h>
 
+#include <tf/transform_broadcaster.h>
+
 namespace slam_czc
 {
 

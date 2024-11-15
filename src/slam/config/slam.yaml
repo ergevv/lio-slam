@@ -8,7 +8,7 @@ mapping:
                  0, 0, 1 ]
 
 rviz:
-  odom_frame_id = "odom" 
+  map_frame_id = "map" 
 
 
 #imu parameters       The more accurate parameters you provide, the better performance

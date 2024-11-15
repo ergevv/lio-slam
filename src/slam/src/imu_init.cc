@@ -43,7 +43,7 @@ namespace slam_czc
         computeMeanAndCov(init_imu_deque_, mean_acce, cov_acce_n_, [](const IMU& imu){return imu.acce_;});
 
         //重力与加速度方向相反
-        gravity_ = -mean_acce/mean_acce.norm() * options_.gravity_norm_;
+        gravity_ = -mean_acce/mean_acce.norm() * options_.gravity_norm_;  //z轴朝上，故g为负
         //计算去除重力后的协方差
         computeMeanAndCov(init_imu_deque_, mean_acce, cov_acce_n_,
                                 [this](const IMU& imu) { return imu.acce_ + gravity_; });

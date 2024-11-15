@@ -1,0 +1,27 @@
+digraph G {
+"base_link" -> "base_footprint"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"odom" -> "base_link"[label="Broadcaster: /gazebo\nAverage rate: 19.812 Hz\nMost recent transform: 37.570 ( 0.025 sec old)\nBuffer length: 4.896 sec\n"];
+"camera_depth_frame" -> "camera_color_frame"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_link" -> "camera_depth_frame"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_color_frame" -> "camera_color_optical_frame"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_bottom_screw_frame" -> "camera_link"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_depth_frame" -> "camera_depth_optical_frame"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "camera_bottom_screw_frame"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_depth_frame" -> "camera_left_ir_frame"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_left_ir_frame" -> "camera_left_ir_optical_frame"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_depth_frame" -> "camera_right_ir_frame"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_right_ir_frame" -> "camera_right_ir_optical_frame"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "imu_base"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "inertial_link"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "support"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"support" -> "velodyne_base_link"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"velodyne_base_link" -> "velodyne"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 37.595 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "front_left_wheel_link"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10.208 Hz\nMost recent transform: 37.500 ( 0.095 sec old)\nBuffer length: 4.800 sec\n"];
+"base_link" -> "front_right_wheel_link"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10.208 Hz\nMost recent transform: 37.500 ( 0.095 sec old)\nBuffer length: 4.800 sec\n"];
+"base_link" -> "rear_left_wheel_link"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10.208 Hz\nMost recent transform: 37.500 ( 0.095 sec old)\nBuffer length: 4.800 sec\n"];
+"base_link" -> "rear_right_wheel_link"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10.208 Hz\nMost recent transform: 37.500 ( 0.095 sec old)\nBuffer length: 4.800 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 37.595"[ shape=plaintext ] ;
+ }->"odom";
+}
