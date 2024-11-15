@@ -109,6 +109,9 @@ namespace slam_czc
         double marg_weight_ = 1.0;
         double p_thresh_ = 0.3;
         double q_thresh_ = 5.0;
+
+        int num_key_frame_ = 0; 
+        double leaf_size_ = 0.5;
     };
 
 }

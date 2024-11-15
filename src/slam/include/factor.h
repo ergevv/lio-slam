@@ -17,7 +17,7 @@ namespace slam_czc
         // last_q_, last_p_, last_v_,  last_bg_, last_ba_,current_q_, current_p_, current_v_,current_bg_, current_ba_
         bool operator()(const T *last_q_, const T *last_p_, const T *last_v_, const T *last_bg_, const T *last_ba_, const T *current_q_, const T *current_p_, const T *current_v_, const T *current_bg_, const T *current_ba_, T *residuals) const
         {
-            Eigen::Map<const Eigen::Quaternion<T>> q_last(last_q_);
+            Eigen::Map<const Eigen::Quaternion<T>> q_last(last_q_); // 虚数在前，实部在后
             Eigen::Map<const Eigen::Matrix<T, 3, 1>> p_last(last_p_);
             Eigen::Map<const Eigen::Matrix<T, 3, 1>> v_last(last_v_);
             Eigen::Map<const Eigen::Matrix<T, 3, 1>> bg_last(last_bg_);
@@ -54,8 +54,6 @@ namespace slam_czc
 
             // 计算陀螺仪偏差误差
             residual.template block<3, 1>(12, 0) = bg_current - bg_last;
-
-
 
             // 应用信息矩阵
             residual = sqrt_info_.cast<T>() * residual;
@@ -187,16 +185,25 @@ namespace slam_czc
             Eigen::Map<Eigen::Matrix<double, 15, 1>> residual(residuals);
             residual = Jr_ * dx + Er_;
 
+            // 
             if (jacobians)
             {
 
                 for (int i = 0; i < 5; ++i)
                 {
+                    if (i == 1)
+                    {
+                        Eigen::Map<Eigen::Matrix<double, 15, 4, Eigen::RowMajor>> Ji(jacobians[i]);
+                        Ji.setZero();
+                        Ji.block<15, 3>(0,0) = Jr_.block<15, 3>(0, i * 3); //自定义雅可比矩阵时，大小是15×4.第四列是0，即对实部求导为0（可能原因：在小角度近似下，四元数的实部 w 对李代数的变化不敏感，因此其导数接近于零。）
+                    }
                     if (jacobians[i])
                     {
                         Eigen::Map<Eigen::Matrix<double, 15, 3, Eigen::RowMajor>> Ji(jacobians[i]);
                         Ji.setZero();
                         Ji = Jr_.block<15, 3>(0, i * 3);
+                        // std::cout << "Matrix" << i << ":\n"
+                        //           << Ji << std::endl;
                     }
                 }
             }

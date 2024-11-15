@@ -45,8 +45,8 @@ namespace slam_czc
         if (!imu_init_flag) // imu初始化
         {
             initIMU();
-            last_key_state_.p_.x() = -p_thresh_ - 0.1; //确保第一帧点云是关键帧
-            return true; // 初始化成功之前的数据舍弃
+            last_key_state_.p_.x() = -p_thresh_ - 0.1; // 确保第一帧点云是关键帧
+            return true;                               // 初始化成功之前的数据舍弃
         }
 
         predictByIMU();
@@ -79,7 +79,6 @@ namespace slam_czc
             imu_pre_ = std::make_shared<IntegrationBase>(last_imu_->acce_, last_imu_->gyro_, imu_init_.init_ba_, imu_init_.init_bg_, imu_init_.cov_acce_n_, imu_init_.cov_gyro_n_, imu_init_.cov_acce_w_, imu_init_.cov_gyro_w_);
             pc_first_flag_ = false;
 
-            
             // 发送一次位姿到rviz
             updatePath(last_state_);
             return true;
@@ -96,17 +95,27 @@ namespace slam_czc
         ndt_pose_ = ndt_.getFinalTransformation();
         optimize();
 
-
-        //关键帧判断，添加点云
+        // 关键帧判断，添加点云
         Eigen::Vector3d delta_p = current_state_.p_ - last_key_state_.p_;
-        Eigen::Vector3d delta_theta = Q2theta(last_key_state_.q_.inverse()*current_state_.q_);
+        Eigen::Vector3d delta_theta = Q2theta(last_key_state_.q_.inverse() * current_state_.q_);
 
-        if (delta_p.norm() > p_thresh_ || delta_theta.norm() > q_thresh_ * 3.14/180.0)
+        if (delta_p.norm() > p_thresh_ || delta_theta.norm() > q_thresh_ * 3.14 / 180.0)
         {
             ndt_pose_ = current_state_.getTransform();
             pcl::transformPointCloud(*pc_trans_filter, *output, ndt_pose_);
             *pc_key_ += *output;
+            pcl::VoxelGrid<Point> voxel_key; // 注意这里模板应该是点的类型
+            if (num_key_frame_>10)
+            {
+                leaf_size_ = 2;
+            }
+            
+            voxel_key.setLeafSize(leaf_size_, leaf_size_, leaf_size_);
+            voxel_key.setInputCloud(pc_key_);
+
+            voxel_key.filter(*pc_key_);
             ndt_.setInputTarget(pc_key_);
+            num_key_frame_ ++;
         }
 
         return true;
@@ -117,7 +126,7 @@ namespace slam_czc
         ceres::Problem problem;
         ceres::LossFunction *loss_function = new ceres::CauchyLoss(1.0);
         // 优化变量定义
-        ceres::LocalParameterization *q_parameterization = new ceres::EigenQuaternionParameterization();
+        ceres::LocalParameterization *q_parameterization = new ceres::EigenQuaternionParameterization();  //虚数在前，实部在后
         // using BlockSolverType = g2o::BlockSolverX;
         // using LinearSolverType = g2o::LinearSolverEigen<BlockSolverType::PoseMatrixType>;
 
@@ -140,10 +149,6 @@ namespace slam_czc
         problem.AddParameterBlock(current_bg_, 3);
         problem.AddParameterBlock(current_ba_, 3);
 
-        // 如果不需要优化外参就设置为fix
-        problem.SetParameterBlockConstant(last_bg_);
-        problem.SetParameterBlockConstant(last_ba_);
-
         ceres::CostFunction *imu_factor = IMUFactor::Create(
             imu_pre_, imu_init_.gravity_);
         problem.AddResidualBlock(imu_factor, loss_function, last_q_, last_p_, last_v_, last_bg_, last_ba_, current_q_, current_p_, current_v_, current_bg_, current_ba_);
@@ -159,6 +164,9 @@ namespace slam_czc
             problem.SetParameterBlockConstant(last_p_);
             problem.SetParameterBlockConstant(last_q_);
             problem.SetParameterBlockConstant(last_v_);
+            // 如果不需要优化外参就设置为fix
+            problem.SetParameterBlockConstant(last_bg_);
+            problem.SetParameterBlockConstant(last_ba_);
         }
 
         // 残差：imu得到的位资、lidar的位资
@@ -172,11 +180,12 @@ namespace slam_czc
         // options.num_threads = 2;
         options.trust_region_strategy_type = ceres::DOGLEG;
         options.max_num_iterations = 10;
+        options.parameter_tolerance = 1e-6; // 参数变化小于1e-6时终止
         // options.use_explicit_schur_complement = true;
         // options.minimizer_progress_to_stdout = true;
         // options.use_nonmonotonic_steps = true;
 
-        options.max_solver_time_in_seconds = 0.4;  //总体优化时间
+        options.max_solver_time_in_seconds = 0.4; // 总体优化时间
 
         ceres::Solver::Summary summary;
         ceres::Solve(options, &problem, &summary); // ceres优化求解
@@ -200,9 +209,8 @@ namespace slam_czc
         // 边缘化
         ceres::Problem::EvaluateOptions eval_options;
         ceres::CRSMatrix jacobian_crs_matrix;
-        //eval_options.residuals = true; // 请求计算残差
+        // eval_options.residuals = true; // 请求计算残差
         std::vector<double> residuals_std;
-        
 
         problem.Evaluate(eval_options, nullptr, &residuals_std, nullptr, &jacobian_crs_matrix);
 
@@ -239,10 +247,12 @@ namespace slam_czc
     }
     bool Process::vecter2double()
     {
-        current_q_[0] = current_state_.q_.w();
-        current_q_[1] = current_state_.q_.x();
-        current_q_[2] = current_state_.q_.y();
-        current_q_[3] = current_state_.q_.z();
+        current_state_.q_.normalize();
+        current_q_[0] = current_state_.q_.x();
+        current_q_[1] = current_state_.q_.y();
+        current_q_[2] = current_state_.q_.z();
+        current_q_[3] = current_state_.q_.w();
+        
         current_p_[0] = current_state_.p_.x();
         current_p_[1] = current_state_.p_.y();
         current_p_[2] = current_state_.p_.z();
@@ -256,10 +266,12 @@ namespace slam_czc
         current_ba_[1] = current_state_.ba_.y();
         current_ba_[2] = current_state_.ba_.z();
 
-        last_q_[0] = last_state_.q_.w();
-        last_q_[1] = last_state_.q_.x();
-        last_q_[2] = last_state_.q_.y();
-        last_q_[3] = last_state_.q_.z();
+        last_state_.q_.normalize();
+        last_q_[0] = last_state_.q_.x();
+        last_q_[1] = last_state_.q_.y();
+        last_q_[2] = last_state_.q_.z();
+        last_q_[3] = last_state_.q_.w();
+        
         last_p_[0] = last_state_.p_.x();
         last_p_[1] = last_state_.p_.y();
         last_p_[2] = last_state_.p_.z();
@@ -308,8 +320,7 @@ namespace slam_czc
         return true;
     }
 
-    Process::Process(std::string imu_topic, std::string pc_topic):
-     pc_key_(new PointType)
+    Process::Process(std::string imu_topic, std::string pc_topic) : pc_key_(new PointType)
     {
         nh = ros::NodeHandle("~");
         sub_imu = nh.subscribe<sensor_msgs::Imu>(imu_topic, 2000, &Process::processIMU, this, ros::TransportHints().tcpNoDelay()); // 频率100
@@ -336,8 +347,6 @@ namespace slam_czc
         ndt_.setTransformationEpsilon(0.01); // 收敛阈值
         ndt_.setStepSize(0.1);               // 梯度下降步长
         // ndt_.setNumThreads(4);               // 使用多线程加速
-
-       
     }
 
 }
