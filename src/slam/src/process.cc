@@ -92,9 +92,9 @@ namespace slam_czc
         PointType::Ptr output(new PointType);
         ndt_pose_ = current_state_.getTransform();
         ndt_.align(*output, ndt_pose_);
-        ndt_pose_ = ndt_.getFinalTransformation();
+        ndt_pose_ = ndt_.getFinalTransformation();  //这里都是面点，导致匹配不好，后续更改
 
-        // optimize();
+        optimize();
 
         // 更新imu预积分
 
@@ -154,7 +154,7 @@ namespace slam_czc
     bool Process::optimize()
     {
         ceres::Problem problem;
-        ceres::LossFunction *loss_function = new ceres::CauchyLoss(1.0);
+        ceres::LossFunction *loss_function = new ceres::CauchyLoss(3.0);
         // 优化变量定义
         ceres::LocalParameterization *q_parameterization = new ceres::EigenQuaternionParameterization(); // 虚数在前，实部在后
         // using BlockSolverType = g2o::BlockSolverX;
@@ -173,6 +173,7 @@ namespace slam_czc
         problem.AddParameterBlock(last_v_, 3);
         problem.AddParameterBlock(last_bg_, 3);
         problem.AddParameterBlock(last_ba_, 3);
+        
         problem.AddParameterBlock(current_p_, 3);
         problem.AddParameterBlock(current_q_, 4, q_parameterization);
         problem.AddParameterBlock(current_v_, 3);

@@ -144,7 +144,7 @@ public:
 
     slam_czc::State predict(slam_czc::State start, Eigen::Vector3d g)
     {
-        Eigen::Quaterniond qj = Eigen::Quaterniond(start.q_.toRotationMatrix() * delta_q.toRotationMatrix());
+        Eigen::Quaterniond qj = start.q_ * delta_q;
         Eigen::Vector3d vj = start.q_.toRotationMatrix() * delta_v + start.v_ + g * sum_dt;
         Eigen::Vector3d pj = start.q_.toRotationMatrix() * delta_p + start.p_ + start.v_ * sum_dt + 0.5d * g * sum_dt * sum_dt;
 

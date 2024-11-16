@@ -12,7 +12,7 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 
 rosbag record -O pc_imu  /velodyne_points  /imu/data
 
-rqt_bag /home/erge/桌面/开源工程/ros_ws/pc_imu.bag
+rqt_bag /home/erge/桌面/开源工程/ros_ws/src/slam/bag/pc_imu2.bag
 rosbag play /home/erge/桌面/开源工程/ros_ws/pc_imu.bag
 
 问题1：为什么libgazebo_ros_velodyne_laser.so无法直接生成，要单独拎出来
