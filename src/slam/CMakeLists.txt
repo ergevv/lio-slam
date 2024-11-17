@@ -18,10 +18,10 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(YAML-CPP REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-set(PCL_DIR "/home/erge/cpp/package/pcl-1.14-install/share/pcl-1.14") 
+# set(PCL_DIR "/home/erge/cpp/package/pcl-1.14-install/share/pcl-1.14") 
 find_package(PCL REQUIRED)
 
-set(Ceres_DIR "/home/erge/cpp/package/ceres-1.14.0-install/lib/cmake/Ceres") 
+# set(Ceres_DIR "/home/erge/cpp/package/ceres-1.14.0-install/lib/cmake/Ceres") 
 find_package(Ceres REQUIRED)
 
 # set(g2o_DIR "/home/erge/cpp/package/g2o-install/lib/cmake/g2o") 
