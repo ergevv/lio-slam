@@ -2,6 +2,8 @@
 
 #### 警告:本项目仍在开发中，故存在些许Bug，请勿用于实际使用，但是用于教程讲解原理足矣
 
+视频代码讲解：[https://www.bilibili.com/video/BV1DhUkYaEnY/?vd_source=0163f7e67ca59d0c9187be5e667dda82](https://www.bilibili.com/video/BV1DhUkYaEnY/?vd_source=0163f7e67ca59d0c9187be5e667dda82)
+
 本项目主要基于LIO(激光、IMU)讲解slam的相关技术，包括：
 
 1、gazebo仿真激光和IMU：[https://github.com/linzs-online/robot_gazebo.git](https://github.com/linzs-online/robot_gazebo.git)

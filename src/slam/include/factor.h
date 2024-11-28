@@ -221,7 +221,7 @@ namespace slam_czc
     {
         PointCloudFactor(const Eigen::Matrix4d &pc_pose, const Eigen::Matrix<double, 6, 6> &ndt_info)
         {
-            ndt_info_ = Eigen::LLT<Eigen::Matrix<double, 6, 6>>(ndt_info.inverse()).matrixL().transpose();
+            ndt_info_ = Eigen::LLT<Eigen::Matrix<double, 6, 6>>(ndt_info).matrixL().transpose();
             // 提取平移部分
             ndt_p_ = pc_pose.block<3, 1>(0, 3);
 

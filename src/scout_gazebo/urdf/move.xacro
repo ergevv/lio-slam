@@ -51,3 +51,77 @@
   </gazebo>
 
 </robot>
+
+
+<!-- ### 1. Skid Steer Drive Controller
+
+```xml
+<gazebo>
+  <plugin name="skid_steer_drive_controller" filename="libgazebo_ros_skid_steer_drive.so">
+    <updateRate>100.0</updateRate>
+    <robotNamespace>/</robotNamespace>
+    <leftFrontJoint>front_left_wheel</leftFrontJoint>
+    <rightFrontJoint>front_right_wheel</rightFrontJoint>
+    <leftRearJoint>rear_left_wheel</leftRearJoint>
+    <rightRearJoint>rear_right_wheel</rightRearJoint>
+    <wheelSeparation>${track}</wheelSeparation>
+    <wheelDiameter>${wheel_radius * 2}</wheelDiameter>
+    <robotBaseFrame>base_link</robotBaseFrame>
+    <torque>20</torque>
+    <topicName>cmd_vel</topicName>
+    <broadcastTF>false</broadcastTF>
+  </plugin>
+</gazebo>
+```
+
+#### 功能：
+- **Skid Steer Drive**：这种控制器适用于四轮差速驱动的机器人，如坦克式机器人。它通过控制四个轮子的速度来实现转向。
+- **控制关节**：需要指定前左轮、前右轮、后左轮和后右轮的关节名称。
+- **更新率**：`<updateRate>` 指定了控制器的更新频率，单位为 Hz。
+- **命名空间**：`<robotNamespace>` 指定了机器人的话题命名空间。
+- **轮子参数**：`<wheelSeparation>` 和 `<wheelDiameter>` 分别指定了轮子之间的间距和直径。
+- **扭矩**：`<torque>` 指定了每个轮子的扭矩。
+- **话题**：`<topicName>` 指定了接收速度命令的话题。
+- **广播 TF**：`<broadcastTF>` 指定是否广播机器人的 TF 变换。
+
+### 2. Planar Move Controller
+
+```xml
+<gazebo>
+  <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
+    <commandTopic>cmd_vel</commandTopic>
+    <odometryTopic>odom</odometryTopic>
+    <odometryFrame>odom</odometryFrame>
+    <odometryRate>20.0</odometryRate>
+    <robotBaseFrame>base_link</robotBaseFrame>
+  </plugin>
+</gazebo>
+```
+
+#### 功能：
+- **Planar Move**：这种控制器适用于平面移动的物体，如简单的移动平台或小车。它通过直接控制机器人的线速度和角速度来实现运动。
+- **命令话题**：`<commandTopic>` 指定了接收速度命令的话题。
+- **里程计话题**：`<odometryTopic>` 指定了发布里程计数据的话题。
+- **里程计帧**：`<odometryFrame>` 指定了里程计数据的参考坐标系。
+- **里程计更新率**：`<odometryRate>` 指定了里程计数据的发布频率，单位为 Hz。
+- **基础帧**：`<robotBaseFrame>` 指定了机器人的基础坐标系。
+
+### 主要区别：
+
+1. **适用场景**：
+   - **Skid Steer Drive Controller**：适用于四轮差速驱动的机器人，如坦克式机器人。
+   - **Planar Move Controller**：适用于简单的平面移动平台，如小车。
+
+2. **控制方式**：
+   - **Skid Steer Drive Controller**：通过控制四个轮子的速度来实现转向。
+   - **Planar Move Controller**：直接控制机器人的线速度和角速度。
+
+3. **参数**：
+   - **Skid Steer Drive Controller**：需要指定轮子的关节、间距、直径等详细参数。
+   - **Planar Move Controller**：主要关注速度命令、里程计数据和坐标系。
+
+4. **复杂度**：
+   - **Skid Steer Drive Controller**：更复杂，需要更多的参数配置。
+   - **Planar Move Controller**：相对简单，适合基本的移动控制。
+
+选择哪个控制器取决于您的具体需求和机器人的类型。 -->

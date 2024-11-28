@@ -92,7 +92,7 @@ namespace slam_czc
         PointType::Ptr output(new PointType);
         ndt_pose_ = current_state_.getTransform();
         ndt_.align(*output, ndt_pose_);
-        ndt_pose_ = ndt_.getFinalTransformation();  //这里都是面点，导致匹配不好，后续更改
+        ndt_pose_ = ndt_.getFinalTransformation(); // 这里都是面点，导致匹配不好，后续更改
 
         optimize();
 
@@ -146,6 +146,7 @@ namespace slam_czc
             voxel_key.filter(*pc_key_);
             ndt_.setInputTarget(pc_key_);
             num_key_frame_++;
+            last_key_state_ = current_state_;
         }
 
         return true;
@@ -173,22 +174,18 @@ namespace slam_czc
         problem.AddParameterBlock(last_v_, 3);
         problem.AddParameterBlock(last_bg_, 3);
         problem.AddParameterBlock(last_ba_, 3);
-        
+
         problem.AddParameterBlock(current_p_, 3);
         problem.AddParameterBlock(current_q_, 4, q_parameterization);
         problem.AddParameterBlock(current_v_, 3);
         problem.AddParameterBlock(current_bg_, 3);
         problem.AddParameterBlock(current_ba_, 3);
 
-        ceres::CostFunction *imu_factor = IMUFactor::Create(
-            imu_pre_, imu_init_.gravity_);
-        problem.AddResidualBlock(imu_factor, loss_function, last_q_, last_p_, last_v_, last_bg_, last_ba_, current_q_, current_p_, current_v_, current_bg_, current_ba_);
-
         if (marg_success_)
         {
             auto *marg_factor = new MargFactor(
                 last_state_, Jr_, Er_, marg_weight_);
-            // problem.AddResidualBlock(marg_factor, loss_function, last_p_, last_q_, last_v_, last_bg_, last_ba_);
+            problem.AddResidualBlock(marg_factor, loss_function, last_p_, last_q_, last_v_, last_bg_, last_ba_);
         }
         else
         {
@@ -200,8 +197,16 @@ namespace slam_czc
             problem.SetParameterBlockConstant(last_ba_);
         }
 
+        ceres::CostFunction *imu_factor = IMUFactor::Create(
+            imu_pre_, imu_init_.gravity_);
+        problem.AddResidualBlock(imu_factor, loss_function, last_q_, last_p_, last_v_, last_bg_, last_ba_, current_q_, current_p_, current_v_, current_bg_, current_ba_);
+
         // 残差：imu得到的位资、lidar的位资
+        double gp2 = 0.1 * 0.1;
+        double ga2 = (2.0 * 3.14 / 180) * (2.0 * 3.14 / 180);
         Eigen::Matrix<double, 6, 6> ndt_info_ = Eigen::Matrix<double, 6, 6>::Identity(); // 后续需要优化
+        ndt_info_.diagonal() << 1.0 / ga2, 1.0 / ga2, 1.0 / ga2, 1.0 / gp2, 1.0 / gp2, 1.0 / gp2;
+
         ceres::CostFunction *pc_factor = PointCloudFactor::Create(
             ndt_pose_.cast<double>(), ndt_info_);
         problem.AddResidualBlock(pc_factor, loss_function, current_q_, current_p_);

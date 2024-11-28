@@ -18,3 +18,6 @@ vscode调试添加环境：
 1、echo ~/桌面/开源工程/VINS-mono-with-drt/devel/setup.bash >> ~/.bashrc
 2、source ~/.bashrc
 3、重启vscode
+
+
+ros教程：【Autolabor初级教程】ROS机器人入门

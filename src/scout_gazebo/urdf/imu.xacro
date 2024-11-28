@@ -48,7 +48,7 @@
                 <topicName>imu/data</topicName>
                 <bodyName>imu_base</bodyName>
                 <updateRateHZ>100.0</updateRateHZ>
-                <gaussianNoise>0.00</gaussianNoise>
+                <gaussianNoise>0.01</gaussianNoise>
                 <xyzOffset>0 0 0</xyzOffset>     
                 <rpyOffset>0 0 0</rpyOffset>
                 <frameName>imu_base</frameName>        
